@@ -1,0 +1,6 @@
+[submodule "cudablin"]
+	path = cudablin
+	url = sergiy@chernidom.org.ua:git/cudablin
+[submodule "itoa"]
+	path = itoa
+	url = sergiy@chernidom.org.ua:git/itoa
