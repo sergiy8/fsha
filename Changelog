@@ -1,0 +1,7 @@
+0.5 Obtain 5
+0.6 dirty
+0.6.1 obtain 6
+0.6.2 stat with c16[]
+0.6.3 search.c ; mk_data with main_multi
+0.6.4 CUDA started; mk_c16.c
+0.6.5 unified kernels

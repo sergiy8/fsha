@@ -1,0 +1,5 @@
+#!/bin/bash
+for i in `ls ../data/?` ;
+do
+	 ./stat `basename $i` $1
+done
