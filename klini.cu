@@ -1,7 +1,7 @@
 #include "pack.h"
+#include "blist.h"
 
 DATATYPE unsigned char * array;
-DATATYPE unsigned char * blist;
 DATATYPE unsigned long long  changed[CACHESIZE];
 
 
@@ -9,7 +9,7 @@ PROCTYPE int StaticWhite(uint32_t w, uint32_t b, uint32_t d){
         uint32_t busy,iwhite,idamka;
 	uint32_t idx;
         Pack(&busy,&iwhite,&idamka,w,b,d);
-		idx = blist[busy];
+		idx = blist_get(busy);
         switch(twobit_get(array + ((iwhite<<RANK)|idamka) * CNK/4, idx)){
         case 3 : // Cimus ZZ
 		return 0;
@@ -31,15 +31,15 @@ PROCTYPE inline int MoveBlack(uint32_t w, uint32_t b, uint32_t d){
 KERNEL
     unsigned i = ij >> RANK;
     unsigned j = ij & RMASK;
+#ifdef WRANK
+	int wrank = _popc(i);
+	if( (wrank != WRANK ) && (wrank!= (RANK-WRANK)))
+		return;
+#endif
     unsigned busy;
     unsigned idx;
     unsigned char * job = array + ij * CNK /4;
-    for(idx=0,busy=ALLONE(RANK);_popc(busy)==RANK;idx++,busy = _permut(busy)){
-
-#ifdef WRANK
-	int wrank = _popc(i);
-	if( (wrank!=WRANK) && (wrank!= (RANK-WRANK))) continue;
-#endif
+    for(idx=0,busy=ALLONE(RANK);_popc(busy)==RANK;idx++,busy = _permut(busy))
 	if(twobit_get(job,idx)==0) {
 	        uint32_t w,b,d;
    		int r;
@@ -48,7 +48,6 @@ KERNEL
 		if(r==0) continue;
 		twobit_set(job,idx,r<0?2:1);
 		atomicAdd(changed+ij%CACHESIZE,1);
-	}
 	}
 }
 

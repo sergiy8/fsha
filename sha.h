@@ -12,7 +12,8 @@
 #error MAXRANK too small
 #endif
 
-#define RMASK ((1<<RANK)-1)
+#define ALLONE(x) ((1<<(x)) -1 )
+#define RMASK ALLONE(RANK)
 
 #ifndef NPROC
 #define NPROC 1
@@ -30,19 +31,14 @@
 #error Please, define DATADIR in Makefile
 #endif
 #define DATA_FORMAT DATADIR"%d"
-#define BLIST_FORMAT DATADIR"blist%d"
 #define BLIST_NAME DATADIR"blist"
 #define STATFILE_FORMAT DATADIR"stat%d"
 #define STATFILE(r) ({char _loc[256]; snprintf(_loc,sizeof(_loc),STATFILE_FORMAT,r);_loc;})
-
-#define BLIST_MAGIC 0x1715
 
 #define dbg(fmt,args...) fprintf(stderr,"%s:%d:"fmt"\n",__FILE__,__LINE__, ##args)
 #define error(fmt,args...) do{fprintf(stderr,errno?"%s:%d:"fmt":%m\n":"%s:%d:"fmt"\n",__FILE__,__LINE__,##args); exit(EXIT_FAILURE);} while(0)
 
 #define panic() error("Panic fucka in %s",__FUNCTION__)
-
-#define ALLONE(x) ((1<<x) -1 )
 
 
 #ifdef __CUDA_ARCH__

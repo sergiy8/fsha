@@ -17,9 +17,12 @@ static uintmax_t oldtotal; // for glukalo
 
 static int rank = RANK;
 
+#define LOOP_START (1<<rank)
+#define LOOP_END   (ALLONE(rank)<<rank)
+
 static void * threadN(void * arg){
-	unsigned ij=(uintptr_t)arg;
-	for(;ij<(1<<(2*rank));ij+=NPROC){
+	unsigned ij=(uintptr_t)arg + LOOP_START;
+	for(;ij<LOOP_END;ij+=NPROC){
 		kernel(ij);
 	}
 	return NULL;
@@ -27,7 +30,7 @@ static void * threadN(void * arg){
 
 static unsigned ij0;
 static void * thread0(void * arg){
-	for(ij0=0;ij0<(1<<(2*rank));ij0+=NPROC){
+	for(ij0=LOOP_START;ij0<LOOP_END;ij0+=NPROC){
 		kernel(ij0);
 	}
 	return NULL;
@@ -78,11 +81,10 @@ int main(int argc, char ** argv){
         for(i=1;i<rank;i++){
                 known[i] = (unsigned char*)malloc_file(abytes(i,cnk[i]),FMODE_RO,DATA_FORMAT,i);
 	}
-	blist = malloc_file(sizeof(uint32_t)<<32l,FMODE_RO,BLIST_NAME);
 #endif
 
 #if defined(IN_before) || defined(IN_klini)
-	blist = malloc_file(sizeof(uint32_t)<<32l,FMODE_RO,BLIST_NAME);
+	blist = malloc_file(BLIST_SIZE,FMODE_RO,BLIST_NAME);
 #endif
 
 #ifdef IN_mk_data
@@ -128,10 +130,12 @@ for(;;) {
 	if(option_v)
 		tprintf("%1d %4ju %4ju %4ju %4ju\n",rank,total[0],total[1],total[2],total[3]);
 	printf("%1d %s %s %s %s ",rank,itoa(total[0]),itoa(total[1]),itoa(total[2]),itoa(total[3]));
+#if 0
 	{ uintmax_t got = total[0] + total[1]+total[2]+total[3];
 	  uintmax_t need = ((uintmax_t)cnk[rank]) << (2*rank);
 	  if(got!=need) error("got=%ju need=%ju\n",got,need);
 	}
+#endif
 	}
 #else
 	tprintf("changed=%ju %s\n",total, itoa(total));

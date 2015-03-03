@@ -1,7 +1,7 @@
 VERSION:=0.7.0 # seven U&R
 NPROC := $(shell grep -ic Processor /proc/cpuinfo)
 MAKEFLAGS = -j $(NPROC)
-RANK ?= 4
+RANK ?= 7
 #WRANK=3
 include cnk.mak
 
@@ -11,8 +11,7 @@ export CC := gcc -Wall -DRANK=${RANK} -DCNK=${CNK} $(if ${WRANK},-DWRANK=${WRANK
 CC += -DDATADIR=\"${DATADIR}/\"
 CC += -DDEBUG
 #CC += -DREVERSE
-CC += -DNPROC=1
-#CC += -DNPROC=$(NPROC)
+CC += -DNPROC=$(NPROC)
 
 
 
@@ -20,7 +19,7 @@ CC += -DNPROC=1
 NVCC:= nvcc -Xptxas -v ${CUDA_GPU} -DRANK=${RANK} -DCNK=${CNK}
 CUDALIBS:= -L/usr/local/cuda/lib64 -L/usr/local/cuda/lib -lcuda -lcudart
 
-INCS := sha.h arch.h twobit.h cnk.h pack.h neighbor.h tprintf.h percent.h
+INCS := sha.h arch.h twobit.h cnk.h pack.h blist.h neighbor.h tprintf.h percent.h
 INCS += neighbor.inc move4.c ask.c malloc_file.c
 UTILS := stat mk_data klini before after
 UTILS2 := mk_blist mk_c16 mk_pascal mk_neighbor
