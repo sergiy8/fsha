@@ -1,17 +1,18 @@
 VERSION:=0.7.0 # seven U&R
 NPROC := $(shell grep -ic Processor /proc/cpuinfo)
 MAKEFLAGS = -j $(NPROC)
-RANK ?= 7
-WRANK=2
+RANK ?= 4
+#WRANK=3
 include cnk.mak
 
 export DATADIR := $(realpath ../data/)
 
 export CC := gcc -Wall -DRANK=${RANK} -DCNK=${CNK} $(if ${WRANK},-DWRANK=${WRANK})
 CC += -DDATADIR=\"${DATADIR}/\"
-#CC += -DDEBUG
+CC += -DDEBUG
 #CC += -DREVERSE
-CC += -DNPROC=$(NPROC)
+CC += -DNPROC=1
+#CC += -DNPROC=$(NPROC)
 
 
 
@@ -30,13 +31,13 @@ CUTILS := mk_data klini before after
 all: ${UTILS}
 qa/% : qa/%.c
 	${MAKE} -C qa $*
-go:	${UTILS} ${DATADIR}/blist${RANK}
+go:	${UTILS} ${DATADIR}/blist
 	./mk_data
 	./before
 	./klini
 	./after
 
-${DATADIR}blist${RANK} : mk_blist
+${DATADIR}blist: mk_blist
 	./$<
 
 ${UTILS} : % :  %.cu main_multithread.c Makefile ${INCS}

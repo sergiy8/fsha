@@ -18,24 +18,24 @@ static uintmax_t oldtotal; // for glukalo
 static int rank = RANK;
 
 static void * threadN(void * arg){
-	unsigned idx=(uintptr_t)arg;
-	for(;idx<cnk[rank];idx+=NPROC){
-		kernel(idx);
+	unsigned ij=(uintptr_t)arg;
+	for(;ij<(1<<(2*rank));ij+=NPROC){
+		kernel(ij);
 	}
 	return NULL;
 }
 
-static unsigned idx0;
+static unsigned ij0;
 static void * thread0(void * arg){
-	for(idx0=0;idx0<cnk[rank];idx0+=NPROC){
-		kernel(idx0);
+	for(ij0=0;ij0<(1<<(2*rank));ij0+=NPROC){
+		kernel(ij0);
 	}
 	return NULL;
 }
 
 static void glukalo(int s){
 	alarm(GINTERVAL);
-	tprintf("%s",percent(idx0,cnk[rank]));
+	tprintf("%s",percent(ij0,1<<(2*rank)));
 #ifndef IN_stat
 	uintmax_t total = 0;
 	int i;
@@ -77,8 +77,12 @@ int main(int argc, char ** argv){
 #if IN_before
         for(i=1;i<rank;i++){
                 known[i] = (unsigned char*)malloc_file(abytes(i,cnk[i]),FMODE_RO,DATA_FORMAT,i);
-                blist[i] = (uint32_t*)malloc_file(sizeof(uint32_t)*cnk[i],FMODE_RO,BLIST_FORMAT,i);
 	}
+	blist = malloc_file(sizeof(uint32_t)<<32l,FMODE_RO,BLIST_NAME);
+#endif
+
+#if defined(IN_before) || defined(IN_klini)
+	blist = malloc_file(sizeof(uint32_t)<<32l,FMODE_RO,BLIST_NAME);
 #endif
 
 #ifdef IN_mk_data
@@ -87,8 +91,6 @@ int main(int argc, char ** argv){
 #else
 	array = malloc_file(abytes(rank,cnk[rank]),FMODE_RW,DATADIR"%d",rank);
 #endif
-
-	busylist = malloc_file(sizeof(uint32_t)*cnk[rank],FMODE_RO,BLIST_FORMAT,rank);
 
 	time(&started);
 	signal(SIGALRM,glukalo);

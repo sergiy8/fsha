@@ -1,12 +1,13 @@
 CC += -I.. -DDATADIR=\"$(realpath ../../data)/\"
 
 INCS := ../sha.h ../twobit.h ../pack.h ../cnk.h
-UTILS := pack cnk facecontrol ask itoa dump permut
+UTILS := pack cnk facecontrol ask itoa permut
 UTILS += move
 UTILS += show
 #UTILS += pascal
 UTILS += haszero
 UTILS += qstat
+UTILS += blist_test
 
 all : ${UTILS}
 

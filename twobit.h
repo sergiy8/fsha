@@ -2,7 +2,7 @@
 #error Change num to uint64_t
 #endif
 
-#define twobit_t unsigned
+#define twobit_t unsigned char
 #define PER_T (4*sizeof(twobit_t))
 
 static inline int _twobit_get(twobit_t * ptr, uint32_t num){

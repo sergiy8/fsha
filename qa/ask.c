@@ -15,8 +15,8 @@ int main(int argc, char ** argv){
 	rank = _popc(b);
         array = malloc_file(abytes(rank,cnk[rank]),FMODE_RO,DATADIR"%d",rank);
 // search index
-	for(x=(1<<rank)-1;x!=b;x=_permut(x))
+	for(x=ALLONE(rank);x!=b;x=_permut(x))
 		idx++;
-	printf("%08X %X %X = %d\n",b,w,d,twobit_get(array+abytes(rank,idx),(w<<rank)|d));
+	printf("%08X %X %X = %d\n",b,w,d,twobit_get(array+((w<<rank)|d)*cnk[rank]/4,idx));
 	return 0;
 }
