@@ -17,8 +17,14 @@ static uintmax_t oldtotal; // for glukalo
 
 static int rank = RANK;
 
+//#ifdef IN_mk_data
+#if 1
+#define LOOP_START 0
+#define LOOP_END   (1<<(2*rank))
+#else
 #define LOOP_START (1<<rank)
 #define LOOP_END   (ALLONE(rank)<<rank)
+#endif
 
 static void * threadN(void * arg){
 	unsigned ij=(uintptr_t)arg + LOOP_START;
@@ -38,7 +44,7 @@ static void * thread0(void * arg){
 
 static void glukalo(int s){
 	alarm(GINTERVAL);
-	tprintf("%s",percent(ij0,1<<(2*rank)));
+	tprintf("%s",percent(ij0-LOOP_START,LOOP_END - LOOP_START));
 #ifndef IN_stat
 	uintmax_t total = 0;
 	int i;

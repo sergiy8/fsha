@@ -13,6 +13,7 @@ KERNEL
 		if(FaceControl(busy,i,j)) {
 		   twobit_set(job,idx,3);
 		   atomicAdd(changed + ij%CACHESIZE,1);
+			continue;
 		}
 		if ( i == 0) {
 		   twobit_set(job,idx,2);

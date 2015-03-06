@@ -1,7 +1,7 @@
 VERSION:=0.7.0 # seven U&R
-NPROC := $(shell grep -ic Processor /proc/cpuinfo)
+NPROC ?= $(shell grep -ic Processor /proc/cpuinfo)
 MAKEFLAGS = -j $(NPROC)
-RANK ?= 7
+RANK ?= 2
 #WRANK=3
 include cnk.mak
 
@@ -9,8 +9,7 @@ export DATADIR := $(realpath ../data/)
 
 export CC := gcc -Wall -DRANK=${RANK} -DCNK=${CNK} $(if ${WRANK},-DWRANK=${WRANK})
 CC += -DDATADIR=\"${DATADIR}/\"
-CC += -DDEBUG
-#CC += -DREVERSE
+#CC += -DDEBUG
 CC += -DNPROC=$(NPROC)
 
 
