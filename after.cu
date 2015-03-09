@@ -7,7 +7,7 @@ KERNEL
     unsigned j = ij & RMASK;
     unsigned busy;
     unsigned idx;
-    unsigned char * job = array + ij * CNK /4;
+    unsigned char * job = array + (uint64_t)ij * CNK /4;
     for(idx=0,busy=ALLONE(RANK);_popc(busy)==RANK;idx++,busy = _permut(busy)){
 		if(FaceControl(busy,i,j)==0)
 		if(twobit_get(job,idx)==3){

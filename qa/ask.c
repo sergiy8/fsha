@@ -3,6 +3,8 @@
 #include "permut.h"
 #include "malloc_file.c"
 
+#include "blist.h"
+
 int main(int argc, char ** argv){
 	uint32_t  x,b,w,d;
 	unsigned char * array;
@@ -14,9 +16,12 @@ int main(int argc, char ** argv){
 	d = getarg(3);
 	rank = _popc(b);
         array = malloc_file(abytes(rank,cnk[rank]),FMODE_RO,DATADIR"%d",rank);
+	blist = malloc_file(BLIST_SIZE,FMODE_RO,BLIST_NAME);
 // search index
 	for(x=ALLONE(rank);x!=b;x=_permut(x))
 		idx++;
+	if ( blist_get(b) != idx )
+		error("What's fucka with blist\n");
 	printf("%08X %X %X = %d\n",b,w,d,twobit_get(array+((w<<rank)|d)*cnk[rank]/4,idx));
 	return 0;
 }

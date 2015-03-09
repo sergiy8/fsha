@@ -17,8 +17,7 @@ static uintmax_t oldtotal; // for glukalo
 
 static int rank = RANK;
 
-//#ifdef IN_mk_data
-#if 1
+#if defined(IN_mk_data) || defined(IN_stat)
 #define LOOP_START 0
 #define LOOP_END   (1<<(2*rank))
 #else
@@ -50,10 +49,10 @@ static void glukalo(int s){
 	int i;
 	for(i=0;i<CACHESIZE;i++)
 		total+=changed[i];
-	printf("\tchg %ju %s\n",total-oldtotal,itoa(total-oldtotal));
+	fprintf(stderr,"\tchg %ju %s\n",total-oldtotal,itoa(total-oldtotal));
 	oldtotal=total;
 #else
-	printf("\n");
+	fprintf(stderr,"\n");
 #endif
 }
 

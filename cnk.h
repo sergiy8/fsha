@@ -31,8 +31,7 @@ static unsigned long long const cnk [25] __attribute__ ((unused)) = {
 };
 
 static inline int bitsize(uint32_t x) {
-    if (x == 0) return 0;
-    return 1 + bitsize(x/2);
+	return 32 - __builtin_clz(x);
 }
 #define cnksize(x) bitsize(cnk[x]-1)
 
