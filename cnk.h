@@ -2,7 +2,7 @@
 #ifdef __CUDA_ARCH__
 __device__
 #endif
-static unsigned long long const cnk [25] __attribute__ ((unused)) = {
+static unsigned long long const cnk32 [25] __attribute__ ((unused)) = {
 1,
 32ull,
 32ull*31/2,
@@ -33,5 +33,17 @@ static unsigned long long const cnk [25] __attribute__ ((unused)) = {
 static inline int bitsize(uint32_t x) {
 	return 32 - __builtin_clz(x);
 }
-#define cnksize(x) bitsize(cnk[x]-1)
+#define cnksize(x) bitsize(cnk32[x]-1)
 
+static unsigned long long const cnk9[] __attribute__ ((unused)) = {
+1,
+9,
+9*8/2,
+9*8/2*7/3,
+9*8/2*7/3*6/4,
+9*8/2*7/3*6/4,
+9*8/2*7/3,
+9*8/2,
+9,
+1,
+};

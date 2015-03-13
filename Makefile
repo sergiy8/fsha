@@ -1,8 +1,8 @@
 VERSION:=0.7.0 # seven U&R
 NPROC ?= $(shell grep -ic Processor /proc/cpuinfo)
 MAKEFLAGS = -j $(NPROC)
-RANK ?= 8
-#WRANK=3
+RANK ?= 9
+WRANK=1
 include cnk.mak
 
 export DATADIR := $(realpath ../data/)
@@ -21,13 +21,14 @@ CUDALIBS:= -L/usr/local/cuda/lib64 -L/usr/local/cuda/lib -lcuda -lcudart
 
 INCS := sha.h arch.h twobit.h cnk.h pack.h blist.h neighbor.h tprintf.h percent.h
 INCS += neighbor.inc move4.c ask.c malloc_file.c
-UTILS := stat mk_data klini before after
+UTILS := mk_data klini before after
 UTILS2 := mk_blist mk_c16 mk_pascal mk_neighbor
 UTILS2 += solver
 UTILS2 += debut
 CUTILS := mk_data klini before after
 
-all: ${UTILS}
+all: ${UTILS} stat
+stat: bin/stat${RANK}
 qa/% : qa/%.c
 	${MAKE} -C qa $*
 go:	${UTILS} ${DATADIR}/blist
@@ -41,6 +42,10 @@ ${DATADIR}blist: mk_blist
 
 ${UTILS} : % :  %.cu main_multithread.c Makefile ${INCS}
 	${CC} -DIN_$* -o $@ -include sha.h -include $< main_multithread.c -lpthread
+
+bin/stat${RANK} : stat.cu main_multithread.c Makefile ${INCS}
+	@mkdir -p bin
+	${CC} -DIN_stat -o $@ -include sha.h -include $< main_multithread.c -lpthread
 
 ${UTILS2} : % :  %.c Makefile ${INCS}
 	${CC} -o $@  $< -lpthread

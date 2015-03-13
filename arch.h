@@ -1,3 +1,16 @@
+#ifdef __CUDA_ARCH__
+#define TID() (((uint64_t)blockIdx.y*blockDim.y+blockIdx.x)*blockDim.x + threadIdx.x)
+#define DATATYPE static __device__
+#define PROCTYPE static __device__
+damaged #define KERNEL extern "C" __global__ void kernel(void) {  uint32_t idx = TID(); if(idx>=CNK) return;
+#define CACHESIZE (1<<12)
+#else
+#define DATATYPE static
+#define PROCTYPE static
+#define KERNEL static void  kernel(unsigned ij){
+#define atomicAdd(ptr,value) (*(ptr)+=(value))
+#define CACHESIZE NPROC
+#endif
 
 #ifdef __CUDA_ARCH__
 #define _ffs  __ffs

@@ -10,6 +10,7 @@ PROCTYPE int StaticWhite(uint32_t w, uint32_t b, uint32_t d){
 	uint32_t idx;
         Pack(&busy,&iwhite,&idamka,w,b,d);
 		idx = blist_get(busy);
+ZZ
         switch(twobit_get(array + (uint64_t)((iwhite<<RANK)|idamka) * CNK/4, idx)){
         case 3 : // Cimus ZZ
 		return 0;
@@ -31,14 +32,9 @@ PROCTYPE inline int MoveBlack(uint32_t w, uint32_t b, uint32_t d){
 KERNEL
     unsigned i = ij >> RANK;
     unsigned j = ij & RMASK;
-#ifdef WRANK
-	int wrank = _popc(i);
-	if( (wrank != WRANK ) && (wrank!= (RANK-WRANK)))
-		return;
-#endif
     unsigned busy;
     unsigned idx;
-    unsigned char * job = array + (uint64_t)ij * CNK /4;
+    unsigned char * job = array + ARRAY_OFFSET(ij);
     for(idx=0,busy=ALLONE(RANK);_popc(busy)==RANK;idx++,busy = _permut(busy))
 	if(twobit_get(job,idx)==0) {
 	        uint32_t w,b,d;

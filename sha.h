@@ -6,13 +6,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#define MAXRANK 9
-
-#if RANK >= MAXRANK
-#error MAXRANK too small
-#endif
-
-#define ALLONE(x) ((1<<(x)) -1 )
+#define ALLONE(x) ((1U<<(x)) -1 )
 #define RMASK ALLONE(RANK)
 
 #ifndef NPROC
@@ -24,14 +18,34 @@
 #include "twobit.h"
 #include "cnk.h"
 #include "tprintf.h"
+#include "blist.h"
 
 #define PATH_MAX 256
 #ifndef DATADIR
 //#define DATADIR "../data/"
 #error Please, define DATADIR in Makefile
 #endif
+
+
 #define DATA_FORMAT DATADIR"%d"
+#define DATA_FORMAT_W DATADIR"%d-%d"
+
+#if RANK > 8
+#define BLIST_NAME DATADIR"blist32"
+#else
 #define BLIST_NAME DATADIR"blist"
+#endif
+
+#if RANK > 8
+#define ARRAY_OFFSET(ij) ((blist_get(ij>>RANK)<<RANK ) | (ij&ALLONE(RANK)) * CNK / 4 )
+#else
+#define ARRAY_OFFSET(ij) ((uint64_t)(ij) * CNK /4 )
+#endif
+
+#define ARRAY_SIZE_S(rank) ((cnk32[rank]<<(2*rank))/4)
+// ZZ TODO
+#define ARRAY_SIZE_W(rank,wrank) ((cnk32[rank]<<(rank))*cnk9[wrank]/4)
+
 #define STATFILE_FORMAT DATADIR"stat%d"
 #define STATFILE(r) ({char _loc[256]; snprintf(_loc,sizeof(_loc),STATFILE_FORMAT,r);_loc;})
 
@@ -40,17 +54,3 @@
 
 #define panic() error("Panic fucka in %s",__FUNCTION__)
 
-
-#ifdef __CUDA_ARCH__
-#define TID() (((uint64_t)blockIdx.y*blockDim.y+blockIdx.x)*blockDim.x + threadIdx.x)
-#define DATATYPE static __device__
-#define PROCTYPE static __device__
-damaged #define KERNEL extern "C" __global__ void kernel(void) {  uint32_t idx = TID(); if(idx>=CNK) return;
-#define CACHESIZE (1<<12)
-#else
-#define DATATYPE static
-#define PROCTYPE static
-#define KERNEL static void  kernel(unsigned ij){
-#define atomicAdd(ptr,value) (*(ptr)+=(value))
-#define CACHESIZE NPROC
-#endif

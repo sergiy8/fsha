@@ -24,4 +24,3 @@ static inline void _twobit_clear(twobit_t * ptr, uint32_t num){
 #define twobit_get(a,b) _twobit_get((twobit_t *)(a),b)
 #define twobit_set(a,b,c) _twobit_set((twobit_t *)(a),b,c)
 #define twobit_clear(a,b) _twobit_clear((twobit_t *)(a),b)
-#define abytes(_rank,_idx) (((uint64_t)(_idx))<<(2*(_rank)-2))

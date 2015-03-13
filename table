@@ -1,5 +1,5 @@
 #!/bin/bash
 for i in `ls ../data/?` ;
 do
-	 ./stat `basename $i` $1
+	 ./bin/stat`basename $i`
 done
