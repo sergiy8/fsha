@@ -1,5 +1,12 @@
 before:
 12:23:40 changed=305111346502 284G
 stat:
-01:25:00 100.0% 8  91G 130G  59G 361G   before
+8  91G 130G  59G 361G   before
+8  59G 149G  72G 361G   klini WRANK=2
+
+mk_data:
+01:12:15 changed=283018100319 264G
+8 376G 1.4G 1.4G 264G   mk_data
+before:
+14:46:12 changed=305111346502 284G
 

@@ -7,7 +7,7 @@ damaged #define KERNEL extern "C" __global__ void kernel(void) {  uint32_t idx =
 #else
 #define DATATYPE static
 #define PROCTYPE static
-#define KERNEL static void  kernel(unsigned ij){
+#define KERNEL static void  kernel(unsigned ij, unsigned char * job){
 #define atomicAdd(ptr,value) (*(ptr)+=(value))
 #define CACHESIZE NPROC
 #endif

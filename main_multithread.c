@@ -17,32 +17,50 @@ static uintmax_t oldtotal; // for glukalo
 
 static void * threadN(void * arg){
 	unsigned i,j;
-	for(j=(uintptr_t)arg;j<(1<<RANK);j+=NPROC)
-#if RANK > 8
-	for(i=ALLONE(WRANK);i<(1<<WRANK);i=_permut(i))
+	unsigned char * job = array;
+#if WFILES
+	for(i=0;i<(1<<WRANK);i=_permut(i)){
 #else
-	for(i=0;i<(1<<RANK);i++)
+	for(i=0;i<(1<<RANK);i++) {
 #endif
-		kernel((i<<RANK)|j);
+#if defined(WRANK) && ! defined(WFILES)
+	  if(_popc(i)==WRANK)
+#endif
+		for(j=(uintptr_t)arg;j<(1<<RANK);j+=NPROC){
+			kernel((i<<RANK)|j, job + JOB_SIZE * j);
+		}
+		job += JOB_SIZE << RANK;
+	}
 	return NULL;
 }
 
-static unsigned j0;
+static volatile unsigned i0;
 static void * thread0(void * arg){
-	unsigned i,j;
-	for(j=0;j<(1<<RANK);j+=NPROC)
-#if RANK > 8
-	for(i=ALLONE(WRANK);i<(1<<WRANK);i=_permut(i))
+	unsigned j;
+	unsigned char * job = array;
+#if WFILES
+	for(i0=0;i0<(1<<WRANK);i0=_permut(i0)){
 #else
-	for(i=0;i<(1<<RANK);i++)
+	for(i0=0;i0<(1<<RANK);i0++) {
 #endif
-		kernel((i<<RANK)|j);
+#if defined(WRANK) && ! defined(WFILES)
+	  if(_popc(i0)==WRANK)
+#endif
+		for(j=0;j<(1<<RANK);j+=NPROC){
+			kernel((i0<<RANK)|j, job + JOB_SIZE * j);
+		}
+		job += JOB_SIZE << RANK;
+	}
 	return NULL;
 }
 
 static void glukalo(int s){
 	alarm(GINTERVAL);
-	tprintf("%s",percent(j0,1<<WRANK));
+#ifdef WRANK
+	tprintf("%s",percent(blist_get(i0),cnk9[WRANK]));
+#else
+	tprintf("%s",percent(i0,1<<RANK));
+#endif
 #ifndef IN_stat
 	uintmax_t total = 0;
 	int i;
@@ -71,7 +89,7 @@ int main(int argc, char ** argv){
 	if(option_v)
 		printf("NPROC=%d RANK=%d\n",NPROC,RANK);
 #if defined(WRANK) && defined(IN_klini)
-		printf("WRANK=%d\n",WRANK);
+	printf("WRANK=%d\n",WRANK);
 #endif
 
 #if IN_before
@@ -82,7 +100,7 @@ int main(int argc, char ** argv){
 
 	blist = malloc_file(BLIST_SIZE,FMODE_RO,BLIST_NAME);
 
-#if   IN_mkdata
+#if   IN_mk_data
 #define FMODE FMODE_CR
 #elif IN_stat
 #define FMODE FMODE_RO
@@ -90,7 +108,7 @@ int main(int argc, char ** argv){
 #define FMODE FMODE_RW
 #endif
 
-#if RANK > 8
+#if WFILES
 	array = malloc_file(ARRAY_SIZE_W(RANK,WRANK),FMODE,DATA_FORMAT_W,RANK,WRANK);
 #else
 	array = malloc_file(ARRAY_SIZE_S(RANK),FMODE,DATA_FORMAT,RANK);
@@ -113,6 +131,12 @@ for(;;) {
 #ifdef IN_klini
 	if(total==0) break;
 	tprintf("changed=%ju %s\n",total,itoa(total));
+#ifdef WRANK
+	char k2[PATH_MAX];
+	snprintf(k2,sizeof(k2),"./bin/klini%d-%d",RANK,RANK-WRANK);
+	execl(k2,"klini",NULL);
+	panic();
+#endif
 	oldtotal=0;
 	total=0;
 	for(i=0;i<NPROC;i++)

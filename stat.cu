@@ -6,7 +6,8 @@ DATATYPE unsigned char * array;
 DATATYPE uintmax_t count[CACHESIZE][4];
 
 KERNEL
-	qstat(count[ij%CACHESIZE], array + ARRAY_OFFSET(ij), CNK/4);
+	qstat(count[ij%CACHESIZE], job, JOB_SIZE);
+//	dbg("i=%d j=%d job=%zd",ij>>RANK, ij&RMASK, job-array);
 }
 
 static void PutStat(void){

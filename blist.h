@@ -24,13 +24,13 @@
 struct blist_data {
     unsigned bits:BLIST_BITS;
 } __attribute__((packed));
-DATATYPE struct blist_data * blist;
+DATATYPE struct blist_data * blist __attribute__((unused));
 #define blist_get(x) blist[x].bits
 #define blist_set(x,v) blist[x].bits=v
 
 #else
 #define BLIST_MAGIC 0x3232
-DATATYPE uint32_t * blist;
+DATATYPE uint32_t * blist __attribute__((unused));
 #define blist_get(x) blist[x]
 #define blist_set(x,v) blist[x]=v
 #endif

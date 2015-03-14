@@ -29,7 +29,6 @@ KERNEL
     unsigned j = ij & RMASK;
     unsigned busy;
     unsigned idx;
-    unsigned char * job = array + ARRAY_OFFSET(ij);
     for(idx=0,busy=ALLONE(RANK);_popc(busy)==RANK;idx++,busy = _permut(busy))
 	if(twobit_get(job,idx)==0) {
 	        uint32_t w,b,d;

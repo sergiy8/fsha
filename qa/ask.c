@@ -15,13 +15,15 @@ int main(int argc, char ** argv){
 	w = getarg(2);
 	d = getarg(3);
 	rank = _popc(b);
-        array = malloc_file(abytes(rank,cnk[rank]),FMODE_RO,DATADIR"%d",rank);
+        array = malloc_file(ARRAY_SIZE_S(rank),FMODE_RO,DATA_FORMAT,rank);
 	blist = malloc_file(BLIST_SIZE,FMODE_RO,BLIST_NAME);
 // search index
 	for(x=ALLONE(rank);x!=b;x=_permut(x))
 		idx++;
 	if ( blist_get(b) != idx )
 		error("What's fucka with blist\n");
-	printf("%08X %X %X = %d\n",b,w,d,twobit_get(array+((w<<rank)|d)*cnk[rank]/4,idx));
+//
+	int res = twobit_get(array+(uint64_t)((w<<rank)|d)*cnk32[rank]/4,idx);
+	printf("%08X %X %X = %d\n",b,w,d,res);
 	return 0;
 }

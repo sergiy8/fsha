@@ -6,11 +6,21 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+#include <linux/limits.h> // PATH_MAX
+
 #define ALLONE(x) ((1U<<(x)) -1 )
 #define RMASK ALLONE(RANK)
 
 #ifndef NPROC
 #define NPROC 1
+#endif
+
+#if RANK > 9
+#error Please, fix cnk9
+#endif
+
+#if RANK > 8
+#define WFILES 1
 #endif
 
 #include "arch.h"
@@ -20,7 +30,6 @@
 #include "tprintf.h"
 #include "blist.h"
 
-#define PATH_MAX 256
 #ifndef DATADIR
 //#define DATADIR "../data/"
 #error Please, define DATADIR in Makefile
@@ -36,12 +45,7 @@
 #define BLIST_NAME DATADIR"blist"
 #endif
 
-#if RANK > 8
-#define ARRAY_OFFSET(ij) ((blist_get(ij>>RANK)<<RANK ) | (ij&ALLONE(RANK)) * CNK / 4 )
-#else
-#define ARRAY_OFFSET(ij) ((uint64_t)(ij) * CNK /4 )
-#endif
-
+#define JOB_SIZE (CNK/4)
 #define ARRAY_SIZE_S(rank) ((cnk32[rank]<<(2*rank))/4)
 // ZZ TODO
 #define ARRAY_SIZE_W(rank,wrank) ((cnk32[rank]<<(rank))*cnk9[wrank]/4)
