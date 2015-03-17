@@ -51,13 +51,17 @@ static void * thread0(void * arg){
 		}
 		job += JOB_SIZE << RANK;
 	}
+#if WFILES
+	if( i0 != cnk(RANK,WRANK))
+		panic();
+#endif
 	return NULL;
 }
 
 static void glukalo(int s){
 	alarm(GINTERVAL);
 #ifdef WRANK
-	tprintf("%s",percent(blist_get(i0),cnk9[WRANK]));
+	tprintf("%s",percent(blist_get(i0),cnk(RANK,WRANK)));
 #else
 	tprintf("%s",percent(i0,1<<RANK));
 #endif

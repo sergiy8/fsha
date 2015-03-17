@@ -3,11 +3,9 @@ NPROC ?= $(shell grep -ic Processor /proc/cpuinfo)
 MAKEFLAGS = -j $(NPROC)
 RANK ?= 9
 #WRANK?=1
-include cnk.mak
-
 export DATADIR := $(realpath ../data/)
 
-export CC := gcc -Wall -DRANK=${RANK} -DCNK=${CNK} $(if ${WRANK},-DWRANK=${WRANK})
+export CC := gcc -Wall -DRANK=${RANK} $(if ${WRANK},-DWRANK=${WRANK})
 CC += -march=native -Ofast
 CC += -DDATADIR=\"${DATADIR}/\"
 #CC += -DDEBUG
@@ -16,7 +14,7 @@ CC += -DNPROC=$(NPROC)
 
 
 -include cudablin/cuda_gpu.mk
-NVCC:= nvcc -Xptxas -v ${CUDA_GPU} -DRANK=${RANK} -DCNK=${CNK}
+NVCC:= nvcc -Xptxas -v ${CUDA_GPU} -DRANK=${RANK}
 CUDALIBS:= -L/usr/local/cuda/lib64 -L/usr/local/cuda/lib -lcuda -lcudart
 
 INCS := sha.h arch.h twobit.h cnk.h pack.h blist.h neighbor.h tprintf.h percent.h
@@ -27,7 +25,7 @@ UTILS := $(addsuffix ${RANK},${UTILS})
 UTILS := $(addprefix bin/,${UTILS})
 
 
-UTILS2 := mk_blist mk_c16 mk_pascal mk_neighbor
+UTILS2 := mk_blist mk_c16 mk_neighbor
 UTILS2 += solver
 UTILS2 += debut
 CUTILS := mk_data before after

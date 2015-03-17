@@ -2,7 +2,7 @@
 #ifdef __CUDA_ARCH__
 __device__
 #endif
-static unsigned long long const cnk32 [25] __attribute__ ((unused)) = {
+static unsigned long long const cnk32 [] __attribute__ ((unused)) = {
 1,
 32ull,
 32ull*31/2,
@@ -28,12 +28,82 @@ static unsigned long long const cnk32 [25] __attribute__ ((unused)) = {
 32ull*31/2*30/3*29/4*28/5*27/6*26/7*25/8*24/9*23/10,
 32ull*31/2*30/3*29/4*28/5*27/6*26/7*25/8*24/9,
 32ull*31/2*30/3*29/4*28/5*27/6*26/7*25/8,
+32ull*31/2*30/3*29/4*28/5*27/6*26/7,
+32ull*31/2*30/3*29/4*28/5*27/6,
+32ull*31/2*30/3*29/4*28/5,
+32ull*31/2*30/3*29/4,
+32ull*31/2*30/3,
+32ull*31/2,
+32ull,
+1,
 };
 
 static inline int bitsize(uint32_t x) {
 	return 32 - __builtin_clz(x);
 }
 #define cnksize(x) bitsize(cnk32[x]-1)
+
+static unsigned long long const cnk1[] __attribute__ ((unused)) = {
+1,
+1,
+};
+static unsigned long long const cnk2[] __attribute__ ((unused)) = {
+1,
+2,
+1,
+};
+static unsigned long long const cnk3[] __attribute__ ((unused)) = {
+1,
+3,
+3,
+1,
+};
+static unsigned long long const cnk4[] __attribute__ ((unused)) = {
+1,
+4,
+4*3/2,
+4,
+1,
+};
+static unsigned long long const cnk5[] __attribute__ ((unused)) = {
+1,
+5,
+5*4/2,
+5*4/2,
+5,
+1,
+};
+static unsigned long long const cnk6[] __attribute__ ((unused)) = {
+1,
+6,
+6*5/2,
+6*5/2*4/3,
+6*5/2,
+6,
+1,
+};
+
+static unsigned long long const cnk7[] __attribute__ ((unused)) = {
+1,
+7,
+7*6/2,
+7*6/2*5/3,
+7*6/2*5/3,
+7*6/2,
+7,
+1,
+};
+static unsigned long long const cnk8[] __attribute__ ((unused)) = {
+1,
+8,
+8*7/2,
+8*7/2*6/3,
+8*7/2*6/3*5/4,
+8*7/2*6/3,
+8*7/2,
+8,
+1,
+};
 
 static unsigned long long const cnk9[] __attribute__ ((unused)) = {
 1,
@@ -47,3 +117,8 @@ static unsigned long long const cnk9[] __attribute__ ((unused)) = {
 9,
 1,
 };
+
+#define _cnk(n,k) cnk ## n [ k ]
+#define cnk(n,k) _cnk(n,k)
+
+#define CNK cnk32[RANK]

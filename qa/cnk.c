@@ -1,12 +1,15 @@
 #include "sha.h"
-#include <itoa/itoa.h>
 
-int main() {
-        int i;
-        for(i=1; i< sizeof(cnk)/sizeof(cnk[0]); i++)
-                printf("%2d(%2d,%2d)\t%10llu\t%14lld bytes per\t%s\n",
-			i,cnksize(i), cnksize(i)+i+i,
-			cnk[i],
-1ull<<(2*i-2),itoa(cnk[i]<<(2*i-2)));
+static long long  fact( int i) {
+	if(i==1) return 1;
+	return i * fact(i-1);
+}
+
+static long long  dcnk(int n, int k) {
+	return fact(n)/fact(k)/fact(n-k);
+}
+
+int main(){
+		printf("cnk(8,3)=%lld %lld\n",cnk(8,3), dcnk(8,3));
         return 0;
 }
