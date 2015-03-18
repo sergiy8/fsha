@@ -19,7 +19,7 @@ static void * threadN(void * arg){
 	unsigned i,j;
 	unsigned char * job = array;
 #if WFILES
-	for(i=0;i<(1<<WRANK);i=_permut(i)){
+	for(i=ALLONE(WRANK);i<(1<<RANK);i=_permut(i)){
 #else
 	for(i=0;i<(1<<RANK);i++) {
 #endif
@@ -38,7 +38,7 @@ static volatile unsigned i0,j0;
 static void * thread0(void * arg){
 	unsigned char * job = array;
 #if WFILES
-	for(i0=0;i0<(1<<WRANK);i0=_permut(i0)){
+	for(i0=ALLONE(WRANK);i0<(1<<RANK);i0=_permut(i0)){
 #else
 	for(i0=0;i0<(1<<RANK);i0++) {
 #endif
@@ -51,7 +51,7 @@ static void * thread0(void * arg){
 		job += JOB_SIZE << RANK;
 	}
 #if WFILES
-	if( i0 != cnk(RANK,WRANK))
+	if( job != array + ((((uintptr_t)cnk(RANK,WRANK))*JOB_SIZE) << RANK))
 		panic();
 #endif
 	return NULL;
@@ -59,7 +59,7 @@ static void * thread0(void * arg){
 
 static void glukalo(int s){
 	alarm(GINTERVAL);
-#if WFILES
+#if WRANK
 	tprintf("%s %3X %3X",percent((blist_get(i0)<<RANK) | j0,cnk(RANK,WRANK)<<RANK),i0,j0);
 #else
 	tprintf("%s %2X %2X",percent((i0<<RANK) | j0,1<<(2*RANK)),i0,j0);
@@ -117,6 +117,10 @@ int main(int argc, char ** argv){
 	array = malloc_file(ARRAY_SIZE_S(RANK),FMODE,DATA_FORMAT,RANK);
 #endif
 
+#if WFILES && defined(IN_klini) && (WRANK != RANK/2)
+	carray = malloc_file(ARRAY_SIZE_W(RANK,WRANK),FMODE_RO,DATA_FORMAT_W,RANK,RANK-WRANK);
+#endif
+
 	time(&started);
 	signal(SIGALRM,glukalo);
 
@@ -158,7 +162,11 @@ for(;;) {
 	  }
 	if(option_v)
 		tprintf("%1d %4ju %4ju %4ju %4ju\n",RANK,total[0],total[1],total[2],total[3]);
+#if WFILES
+	printf("%1d-%1d %s %s %s %s ",RANK,WRANK,itoa(total[0]),itoa(total[1]),itoa(total[2]),itoa(total[3]));
+#else
 	printf("%1d %s %s %s %s ",RANK,itoa(total[0]),itoa(total[1]),itoa(total[2]),itoa(total[3]));
+#endif
 	}
 #else
 	tprintf("changed=%ju %s\n",total, itoa(total));
