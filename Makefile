@@ -30,7 +30,14 @@ UTILS2 += solver
 UTILS2 += debut
 CUTILS := mk_data before after
 
+ifneq (${RANK},9)
 WRANK_LIST := $(shell "seq" $$((${RANK}-1)))
+else
+ifeq (${WRANK},)
+$(error WRANK should be set in WFILE mode)
+endif
+WRANK_LIST:= ${WRANK}
+endif
 
 all: ${UTILS} klinies
 KLINIES := $(addprefix bin/klini${RANK}-,${WRANK_LIST})

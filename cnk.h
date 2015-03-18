@@ -43,29 +43,31 @@ static inline int bitsize(uint32_t x) {
 }
 #define cnksize(x) bitsize(cnk32[x]-1)
 
-static unsigned long long const cnk1[] __attribute__ ((unused)) = {
+typedef unsigned long long const cnk_t;
+
+static cnk_t cnk1[] __attribute__ ((unused)) = {
 1,
 1,
 };
-static unsigned long long const cnk2[] __attribute__ ((unused)) = {
+static cnk_t cnk2[] __attribute__ ((unused)) = {
 1,
 2,
 1,
 };
-static unsigned long long const cnk3[] __attribute__ ((unused)) = {
+static cnk_t cnk3[] __attribute__ ((unused)) = {
 1,
 3,
 3,
 1,
 };
-static unsigned long long const cnk4[] __attribute__ ((unused)) = {
+static cnk_t cnk4[] __attribute__ ((unused)) = {
 1,
 4,
 4*3/2,
 4,
 1,
 };
-static unsigned long long const cnk5[] __attribute__ ((unused)) = {
+static cnk_t cnk5[] __attribute__ ((unused)) = {
 1,
 5,
 5*4/2,
@@ -73,7 +75,7 @@ static unsigned long long const cnk5[] __attribute__ ((unused)) = {
 5,
 1,
 };
-static unsigned long long const cnk6[] __attribute__ ((unused)) = {
+static cnk_t cnk6[] __attribute__ ((unused)) = {
 1,
 6,
 6*5/2,
@@ -83,7 +85,7 @@ static unsigned long long const cnk6[] __attribute__ ((unused)) = {
 1,
 };
 
-static unsigned long long const cnk7[] __attribute__ ((unused)) = {
+static cnk_t cnk7[] __attribute__ ((unused)) = {
 1,
 7,
 7*6/2,
@@ -93,7 +95,7 @@ static unsigned long long const cnk7[] __attribute__ ((unused)) = {
 7,
 1,
 };
-static unsigned long long const cnk8[] __attribute__ ((unused)) = {
+static cnk_t cnk8[] __attribute__ ((unused)) = {
 1,
 8,
 8*7/2,
@@ -105,7 +107,7 @@ static unsigned long long const cnk8[] __attribute__ ((unused)) = {
 1,
 };
 
-static unsigned long long const cnk9[] __attribute__ ((unused)) = {
+static cnk_t cnk9[] __attribute__ ((unused)) = {
 1,
 9,
 9*8/2,
@@ -118,7 +120,11 @@ static unsigned long long const cnk9[] __attribute__ ((unused)) = {
 1,
 };
 
-#define _cnk(n,k) cnk ## n [ k ]
-#define cnk(n,k) _cnk(n,k)
+static cnk_t *cnk_matrix[] __attribute__ ((unused)) = {
+NULL,cnk1,cnk2,cnk3,cnk4,cnk5,cnk6,cnk7,cnk8,cnk9,
+[32] = cnk32,
+};
+
+#define cnk(n,k) cnk_matrix[n][k]
 
 #define CNK cnk32[RANK]

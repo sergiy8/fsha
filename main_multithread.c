@@ -34,9 +34,8 @@ static void * threadN(void * arg){
 	return NULL;
 }
 
-static volatile unsigned i0;
+static volatile unsigned i0,j0;
 static void * thread0(void * arg){
-	unsigned j;
 	unsigned char * job = array;
 #if WFILES
 	for(i0=0;i0<(1<<WRANK);i0=_permut(i0)){
@@ -46,8 +45,8 @@ static void * thread0(void * arg){
 #if defined(WRANK) && ! defined(WFILES)
 	  if(_popc(i0)==WRANK)
 #endif
-		for(j=0;j<(1<<RANK);j+=NPROC){
-			kernel((i0<<RANK)|j, job + JOB_SIZE * j);
+		for(j0=0;j0<(1<<RANK);j0+=NPROC){
+			kernel((i0<<RANK)|j0, job + JOB_SIZE * j0);
 		}
 		job += JOB_SIZE << RANK;
 	}
@@ -60,10 +59,10 @@ static void * thread0(void * arg){
 
 static void glukalo(int s){
 	alarm(GINTERVAL);
-#ifdef WRANK
-	tprintf("%s",percent(blist_get(i0),cnk(RANK,WRANK)));
+#if WFILES
+	tprintf("%s %3X %3X",percent((blist_get(i0)<<RANK) | j0,cnk(RANK,WRANK)<<RANK),i0,j0);
 #else
-	tprintf("%s",percent(i0,1<<RANK));
+	tprintf("%s %2X %2X",percent((i0<<RANK) | j0,1<<(2*RANK)),i0,j0);
 #endif
 #ifndef IN_stat
 	uintmax_t total = 0;
