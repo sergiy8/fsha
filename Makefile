@@ -3,7 +3,7 @@ NPROC ?= $(shell grep -ic Processor /proc/cpuinfo)
 MAKEFLAGS = -j $(NPROC)
 RANK ?= 9
 ifeq (${RANK},9)
-WRANK ?= 1;
+WRANK ?= 1
 endif
 export DATADIR := $(realpath ../data/)
 
@@ -40,6 +40,7 @@ $(error WRANK should be set in WFILE mode)
 endif
 WRANK_LIST:= ${WRANK}
 endif
+$(info WRANK_LIST=${WRANK_LIST})
 
 all: ${UTILS} klinies
 KLINIES := $(addprefix bin/klini${RANK}-,${WRANK_LIST})
@@ -59,6 +60,7 @@ ${DATADIR}blist: mk_blist
 ${UTILS} : bin/%${RANK} :  %.cu main_multithread.c Makefile ${INCS}
 	@mkdir -p bin
 	${CC} -DIN_$* -include sha.h -include $< main_multithread.c -lpthread -o$@
+
 ${KLINIES}: bin/klini${RANK}-% : klini.cu main_multithread.c Makefile ${INCS}
 	@mkdir -p bin
 	${CC} -DIN_klini -DWRANK=$* -include sha.h -include klini.cu main_multithread.c -lpthread -o$@

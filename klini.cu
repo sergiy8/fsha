@@ -14,7 +14,7 @@ PROCTYPE int StaticWhite(uint32_t w, uint32_t b, uint32_t d){
 	uint32_t idx;
         Pack(&busy,&iwhite,&idamka,w,b,d);
 		idx = blist_get(busy);
-        switch(twobit_get(carray + (uint64_t)((iwhite<<RANK)|idamka) * CNK/4, idx)){
+        switch(twobit_get(carray + (uint64_t)((iwhite<<RANK)|idamka) * JOB_SIZE, idx)){
         case 3 : // Cimus ZZ
 		return 0;
         case 0 :
