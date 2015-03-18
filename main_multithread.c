@@ -59,6 +59,9 @@ static void * thread0(void * arg){
 
 static void glukalo(int s){
 	alarm(GINTERVAL);
+	if (i0 >= (1<<RANK))
+		tprintf("100%%");
+	else
 #if WRANK
 	tprintf("%s %3X %3X",percent((blist_get(i0)<<RANK) | j0,cnk(RANK,WRANK)<<RANK),i0,j0);
 #else

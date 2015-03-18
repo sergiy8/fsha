@@ -6,7 +6,7 @@ before
 after
 mk_blist
 mk_c16
-mk_pascal
+mk_cnk
 mk_neighbor
 solver
 debut
@@ -16,7 +16,6 @@ cbefore
 cafter
 *.cubin
 *.kernel
-c16.inc
 dbcreat
 dbask
 dblist

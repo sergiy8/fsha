@@ -1,4 +1,5 @@
 #include "sha.h"
+#include "itoa/itoa.h"
 #include "percent.h"
 
 static long long  fact( int i) {
@@ -24,5 +25,8 @@ int main(){
 				printf("\n");
 			}
 		}
+#define DARRAY_SIZE_W(rank,wrank) ((cnk(32,rank)<<(rank))*dcnk(rank,wrank)/4)
+		for(i=8;i<14;i++)
+				printf("Fsize %d-1=%lld %s\n",i,DARRAY_SIZE_W(i,1),itoa(DARRAY_SIZE_W(i,1)));
         return 0;
 }

@@ -23,7 +23,7 @@ int main(int argc, char ** argv){
 	if ( blist_get(b) != idx )
 		error("What's fucka with blist\n");
 //
-	int res = twobit_get(array+(uint64_t)((w<<rank)|d)*cnk32[rank]/4,idx);
+	int res = twobit_get(array+(uint64_t)((w<<rank)|d)*cnk(32,rank)/4,idx);
 	printf("%08X %X %X = %d\n",b,w,d,res);
 	return 0;
 }
