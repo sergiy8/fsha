@@ -9,4 +9,10 @@ mk_data:
 8 376G 1.4G 1.4G 264G   mk_data
 before:
 14:46:12 changed=305111346502 284G
+klini2:
+8  56G 149G  76G 361G   klini WRANK=6
+klini3 part (21M portion):
+8  31G 162G  88G 361G 	klini WRANK=6
+
+
 

@@ -22,14 +22,21 @@ CUDALIBS:= -L/usr/local/cuda/lib64 -L/usr/local/cuda/lib -lcuda -lcudart
 INCS := sha.h arch.h twobit.h pack.h blist.h neighbor.h tprintf.h percent.h
 INCS += cnk.inc neighbor.inc move4.c ask.c malloc_file.c
 
+# DB processors
 UTILS := stat mk_data before after
 UTILS := $(addsuffix ${RANK},${UTILS})
 UTILS := $(addprefix bin/,${UTILS})
 
 
+# helpers
 UTILS2 := mk_blist mk_c16 mk_neighbor mk_cnk
 UTILS2 += solver
 UTILS2 += debut
+
+
+#the only in the class
+UTILS3 := select
+
 CUTILS := mk_data before after
 
 ifneq (${RANK},9)
@@ -66,7 +73,12 @@ ${KLINIES}: bin/klini${RANK}-% : klini.cu main_multithread.c Makefile ${INCS}
 	${CC} -DIN_klini -DWRANK=$* -include sha.h -include klini.cu main_multithread.c -lpthread -o$@
 
 ${UTILS2} : % :  %.c Makefile ${INCS}
-	${CC} $< -lpthread -o$@
+	${CC} $< -lpthread  -o$@
+
+select: select.c Makefile select.inc ${INCS}
+	${CC} -Iplugin_select -I. $< -lpthread -lreadline -o$@
+select.inc: plugin_select Makefile
+	ls $</*.c | awk '{print "#include","<"$$1">";}' > $@
 
 $(addprefix c,${CUTILS}) : c% : %.kernel cudamain.cpp cudablin/cudablin.h ${INCS}
 	${NVCC} -DIN_$* -o $@ -include sha.h -include $*.kernel cudamain.cpp  ${CUDALIBS}
@@ -76,12 +88,11 @@ $(addprefix c,${CUTILS}) : c% : %.kernel cudamain.cpp cudablin/cudablin.h ${INCS
 %.cubin : %.cu ${INCS}
 	${NVCC} -DIN_$* --cubin -o $@ -include sha.h $<
 
-CLEANLIST := ${UTILS2} $(addprefix c,${CUTILS}) *.cubin *.kernel
+CLEANLIST := ${UTILS2} ${UTILS3} $(addprefix c,${CUTILS}) *.cubin *.kernel
 clean:
 	${MAKE} -C dbutil clean
 	${MAKE} -C qa clean
 	rm -rf $(CLEANLIST)
-	rm -rf bin
 
 PROJDIR := $(shell basename ${CURDIR})
 tar:
