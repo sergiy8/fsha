@@ -8,13 +8,15 @@
 
 static char prompt[256];
 
-enum {V_RANK,V_WRANK};
+enum {V_RANK,V_WRANK,V_RES};
 struct {
 	const char * name;
+	const char * helpline;
 	unsigned value;
 } vars [] = {
 [V_RANK] =  {"rank"},
 [V_WRANK] = {"wrank"},
+[V_RES] = {"res", "Only db entries with this result"},
 };
 
 #define rank vars[V_RANK].value

@@ -134,6 +134,7 @@ for(;;) {
 	}
 	for(i=0;i<NPROC;i++){
 			pthread_join(pid[i], NULL);
+	alarm(0);
 #ifndef IN_stat
 			total+=changed[i];
 #endif
