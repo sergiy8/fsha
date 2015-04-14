@@ -1,7 +1,7 @@
 VERSION:=0.7.0 # seven U&R
 NPROC ?= $(shell grep -ic Processor /proc/cpuinfo)
 MAKEFLAGS = -j $(NPROC)
-RANK ?= 9
+RANK ?= 8
 ifeq (${RANK},9)
 WRANK ?= 1
 endif

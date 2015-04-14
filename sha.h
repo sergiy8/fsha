@@ -5,6 +5,7 @@
 #include <errno.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <syslog.h>
 
 #include <linux/limits.h> // PATH_MAX
 

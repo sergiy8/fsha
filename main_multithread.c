@@ -92,6 +92,9 @@ int main(int argc, char ** argv){
 	}
 	if(optind!=argc) usage(argv[0]);
 
+	openlog(argv[0],0,LOG_LOCAL7);
+	syslog(LOG_INFO, "started");
+
 	if(option_v)
 		printf("NPROC=%d RANK=%d\n",NPROC,RANK);
 #if defined(WRANK) && defined(IN_klini)
@@ -142,10 +145,12 @@ for(;;) {
 #ifdef IN_klini
 	if(total==0) break;
 	tprintf("changed=%ju %s\n",total,itoa(total));
+	syslog(LOG_INFO,"changed=%ju %s\n",total,itoa(total));
 #ifdef WRANK
+//	syslog(LOG_INFO,"finished with execl()");
 	char k2[PATH_MAX];
 	snprintf(k2,sizeof(k2),"./bin/klini%d-%d",RANK,RANK-WRANK);
-	execl(k2,"klini",NULL);
+	execl(k2,k2,NULL);
 	panic();
 #endif
 	oldtotal=0;
@@ -172,8 +177,10 @@ for(;;) {
 	printf("%1d %s %s %s %s ",RANK,itoa(total[0]),itoa(total[1]),itoa(total[2]),itoa(total[3]));
 #endif
 	}
+	syslog(LOG_INFO,"finished");
 #else
 	tprintf("changed=%ju %s\n",total, itoa(total));
+	syslog(LOG_INFO,"changed=%ju %s\n", total, itoa(total));
 #endif
 	PutStat();
 	return 0;
