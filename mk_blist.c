@@ -4,7 +4,6 @@
 #include "permut.h"
 #include "tprintf.h"
 #include "malloc_file.c"
-#include "blist.h"
 
 #define GINTERVAL 60
 

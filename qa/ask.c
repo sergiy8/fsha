@@ -3,8 +3,6 @@
 #include "permut.h"
 #include "malloc_file.c"
 
-#include "blist.h"
-
 int main(int argc, char ** argv){
 	uint32_t  x,b,w,d;
 	unsigned char * array;

@@ -33,9 +33,8 @@ UTILS2 := mk_blist mk_c16 mk_neighbor mk_cnk
 UTILS2 += solver
 UTILS2 += debut
 
-
-#the only in the class
 UTILS3 := select
+UTILS3 += asciiart
 
 CUTILS := mk_data before after
 
@@ -79,6 +78,10 @@ select: select.c Makefile select.inc ${INCS}
 	${CC} -Iplugin_select -I. $< -lpthread -lreadline -o$@
 select.inc: plugin_select Makefile
 	ls $</*.c | awk '{print "#include","<"$$1">";}' > $@
+
+NCURSES_LIBS := $(shell ncurses5-config --libs)
+asciiart: asciiart.c Makefile ${INCS}
+	${CC} -Wall $< ${NCURSES_LIBS} -o$@
 
 $(addprefix c,${CUTILS}) : c% : %.kernel cudamain.cpp cudablin/cudablin.h ${INCS}
 	${NVCC} -DIN_$* -o $@ -include sha.h -include $*.kernel cudamain.cpp  ${CUDALIBS}
