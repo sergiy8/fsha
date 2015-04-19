@@ -20,7 +20,7 @@ NVCC:= nvcc -Xptxas -v ${CUDA_GPU} -DRANK=${RANK}
 CUDALIBS:= -L/usr/local/cuda/lib64 -L/usr/local/cuda/lib -lcuda -lcudart
 
 INCS := sha.h arch.h twobit.h pack.h blist.h neighbor.h tprintf.h percent.h
-INCS += cnk.inc neighbor.inc move4.c ask.c malloc_file.c
+INCS += cnk.inc neighbor.inc megask.inc move4.c ask.c malloc_file.c
 
 # DB processors
 UTILS := stat mk_data before after

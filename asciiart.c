@@ -5,7 +5,10 @@
 #include "sha.h"
 #include "pack.h"
 
-static WINDOW * wdoska, *whex, *wlog;
+
+static WINDOW * wdoska, *whex, *wlog, *wask, *whelp;
+#define putlog(fmt,args...) do{wprintw(wlog,fmt"\n",##args); wrefresh(wlog);}while(0)
+
 uint32_t b = 0xfff00fff;
 uint32_t w = 0x00000fff;
 uint32_t d = 0;
@@ -18,6 +21,14 @@ uint32_t d = 0;
 
 #define LOGY (HEXY+2)
 #define LOGX 0
+
+#define ASKY DOSKAY
+#define ASKX (DOSKAX+20)
+
+#define HELPY 10
+#define HELPX (DOSKAX+20)
+
+#include "megask.inc"
 
 static void doska(uint32_t w, uint32_t b, uint32_t d){
 	int i,j;
@@ -38,7 +49,6 @@ static void doska(uint32_t w, uint32_t b, uint32_t d){
 	wrefresh(wdoska);
 }
 
-#define putlog(fmt,args...) do{wprintw(wlog,fmt"\n",##args); wrefresh(wlog);}while(0)
 
 int main(){
 	setlocale(LC_ALL,"");
@@ -54,32 +64,59 @@ int main(){
 //	idcok(whex,TRUE);
 //	immedok(whex,TRUE);
 
-	wlog = newwin(LINES-LOGY,COLS,LOGY,LOGX);
+	wlog = newwin(LINES-LOGY,COLS-LOGX,LOGY,LOGX);
 	scrollok(wlog,TRUE);
 	idlok(wlog,TRUE);
+
+	wask = newwin(2,20,ASKY,ASKX);
+
+	whelp = newwin(5,COLS-HELPX,HELPY,HELPX);
+	mvwprintw(whelp,0,0,"TAB - rotate");
+	wrefresh(whelp);
+
+	megask_init();
 
 new_doska:
 	doska(w,b,d);
 
+	mvwprintw(wask, 0, 0, "Megask: %d", megask(b,w,d));
+	wrefresh(wask);
+
 	char str[COLS];
 	int pos=0;
-	snprintf(str,sizeof(str),"%08X %X %X",b,w,d);
+	snprintf(str,sizeof(str),"%08X %X %X          ",b,w,d);
 	for(;;) {
 		MEVENT event;
 		mvwprintw(whex,0,0,"%s",str);
 		wrefresh(whex);
 		int c = mvwgetch(whex,0,pos);
-		putlog("%x",c);
 		switch(c){
 			default:
-				if( c!= ' ' && !isxdigit(c))
+				if( c!= ' ' && !isxdigit(c)) {
+					continue;
+					putlog("%x",c);
+				}
+				if(str[pos]==0)
 					continue;
 				str[pos++] = c;
-				str[pos]=0;
+				continue;
+			case 0x104:
+				if(pos) pos--;
+				continue;
+			case 0x105:
+				if(str[pos]==0)
+					continue;
+				pos++;
 				continue;
 			case 0x107:
-				if(pos) pos--;
-				str[pos]=0;
+				if(pos==0)
+					continue;
+				pos--;
+				{ int i;
+				  for(i=pos;str[i+1];i++)
+					str[i]=str[i+1];
+				  str[i]=0;
+				}
 				continue;
 			case 0x0a:
 				wclrtobot(whex);
@@ -96,6 +133,16 @@ new_doska:
 				  putlog("%08X %X %X",b,w,d);
 				  goto new_doska;
 				}
+			case 9:
+				{ uint32_t ub,uw,ud;
+				  Unpack(b,w,d,&uw,&ub,&ud);
+				  uw = _brev(uw);
+				  ub = _brev(ub);
+				  ud = _brev(ud);
+				  Pack(&b,&w,&d,uw,ub,ud);
+				  w ^= ALLONE(__builtin_popcount(b));
+				}
+				goto new_doska;
 			case KEY_MOUSE:
 				if(getmouse(&event) != OK) continue;
 				putlog("bstate=%x",event.bstate);
