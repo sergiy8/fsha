@@ -18,7 +18,8 @@ static void megask_init(void) {
 	}
 }
 
-static int megask(uint32_t busy, uint32_t iwhite,uint32_t idamka){
+static int megask(uint32_t busy, uint32_t iwhite,uint32_t idamka) __attribute((const));
+static int megask(uint32_t busy, uint32_t iwhite,uint32_t idamka) {
 	int arank = __builtin_popcount(busy);
 	if(known[arank]==NULL)
 		return 4;
