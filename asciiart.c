@@ -1,4 +1,5 @@
 #include <ctype.h>
+#include <string.h>
 #include <locale.h>
 #include <ncurses.h>
 
@@ -9,8 +10,13 @@
 static WINDOW * wdoska, *whex, *wlog, *wask, *whelp;
 #define putlog(fmt,args...) do{wprintw(wlog,fmt"\n",##args); wrefresh(wlog);}while(0)
 
+#if 0
 uint32_t b = 0xfff00fff;
 uint32_t w = 0x00000fff;
+#else
+uint32_t b = 0x00f00f00;
+uint32_t w = 0x0000000f;
+#endif
 uint32_t d = 0;
 
 #define DOSKAY ((LINES-8)/2)
@@ -25,8 +31,8 @@ uint32_t d = 0;
 #define ASKY DOSKAY
 #define ASKX (DOSKAX+20)
 
-#define HELPY 10
-#define HELPX (DOSKAX+20)
+#define HELPY 1
+#define HELPX 1
 
 #include "megask.inc"
 
@@ -72,6 +78,8 @@ int main(){
 
 	whelp = newwin(5,COLS-HELPX,HELPY,HELPX);
 	mvwprintw(whelp,0,0,"TAB - rotate");
+	mvwprintw(whelp,1,0,"Shift/Arrows - shift position");
+	mvwprintw(whelp,2,0,"Shift/Digit - change pawn");
 	wrefresh(whelp);
 
 	megask_init();
@@ -92,23 +100,33 @@ new_doska:
 		int c = mvwgetch(whex,0,pos);
 		switch(c){
 			default:
+				{ const char * klava="!@#$%^&*()_";
+				  char * p = strchr(klava,c);
+				  if(p!=NULL) {
+						int invert = p - klava;
+						if (invert < __builtin_popcount(b)) {
+							w ^= 1<<invert;
+							goto new_doska;
+						}
+				  }
+				}
 				if( c!= ' ' && !isxdigit(c)) {
-					continue;
 					putlog("%x",c);
+					continue;
 				}
 				if(str[pos]==0)
 					continue;
 				str[pos++] = c;
 				continue;
-			case 0x104:
+			case 0x104: // Left
 				if(pos) pos--;
-				continue;
+				continue; // Right
 			case 0x105:
 				if(str[pos]==0)
 					continue;
 				pos++;
 				continue;
-			case 0x107:
+			case 0x107: // Del
 				if(pos==0)
 					continue;
 				pos--;
@@ -133,6 +151,22 @@ new_doska:
 				  putlog("%08X %X %X",b,w,d);
 				  goto new_doska;
 				}
+			case 0x150: // shift - down
+				if (b&0xf) continue;
+				b>>=4;
+				goto new_doska;
+			case 0x151: // shift-up
+				if (b&0xf0000000) continue;
+				b<<=4;
+				goto new_doska;
+			case 0x192: //shift-right
+				if( b&0x88888888) continue;
+				b<<=1;
+				goto new_doska;
+			case 0x189: //shift-left
+				if(b&0x11111111) continue;
+				b>>=1;
+				goto new_doska;
 			case 9:
 				{ uint32_t ub,uw,ud;
 				  Unpack(b,w,d,&uw,&ub,&ud);
