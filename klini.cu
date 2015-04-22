@@ -31,6 +31,9 @@ PROCTYPE inline int MoveBlack(uint32_t w, uint32_t b, uint32_t d){
         return StaticWhite(_brev(w),_brev(b),_brev(d));
 }
 
+static unsigned spewcount[CACHESIZE];
+#define SPEW_LEVEL 128
+
 #include "move4.c"
 KERNEL
     unsigned i = ij >> RANK;
@@ -45,6 +48,8 @@ KERNEL
        		r = MoveWhite(w,b,d);
 		if(r==0) continue;
 		twobit_set(job,idx,r<0?2:1);
+		if ( spewcount[ij%CACHESIZE]++ % SPEW_LEVEL == 0 )
+			fprintf(stderr,"%08X %X %x %d\n",busy,i,j,r<0?2:1);
 		atomicAdd(changed+ij%CACHESIZE,1);
 	}
 }
