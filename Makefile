@@ -13,6 +13,7 @@ CC += -DDATADIR=\"${DATADIR}/\"
 #CC += -DDEBUG
 CC += -DNPROC=$(NPROC)
 
+CC += -DMEGASK_REMOTE
 
 
 -include cudablin/cuda_gpu.mk
@@ -20,7 +21,7 @@ NVCC:= nvcc -Xptxas -v ${CUDA_GPU} -DRANK=${RANK}
 CUDALIBS:= -L/usr/local/cuda/lib64 -L/usr/local/cuda/lib -lcuda -lcudart
 
 INCS := sha.h arch.h twobit.h pack.h blist.h neighbor.h tprintf.h percent.h
-INCS += cnk.inc neighbor.inc megask.inc move4.c ask.c malloc_file.c
+INCS += cnk.inc neighbor.inc megask.c move4.c ask.c malloc_file.c
 
 # DB processors
 UTILS := stat mk_data before after
@@ -32,6 +33,7 @@ UTILS := $(addprefix bin/,${UTILS})
 UTILS2 := mk_blist mk_c16 mk_neighbor mk_cnk
 UTILS2 += solver
 UTILS2 += debut
+UTILS2 += shader
 
 UTILS3 := select
 UTILS3 += asciiart

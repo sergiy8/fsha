@@ -26,6 +26,7 @@
 #include "cnk.inc"
 #include "tprintf.h"
 #include "blist.h"
+#include "remote.h"
 
 #ifndef DATADIR
 //#define DATADIR "../data/"

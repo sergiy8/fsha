@@ -59,7 +59,7 @@ uint32_t d = 0;
 #define PENSY 1
 #define PENSX (__builtin_strlen(pens_prompt) + __builtin_strlen(pens))
 
-#include "megask.inc"
+#include "megask.c"
 
 static void draw_pen(void){
 	int i;
@@ -135,6 +135,9 @@ int main(int argc, char ** argv){
 	} else if (argc!=1) {
 		error("Three args!");
 	}
+
+	megask_init();
+
 	setlocale(LC_ALL,"");
 	initscr();
 
@@ -170,7 +173,6 @@ int main(int argc, char ** argv){
 	wpen = newwin(PENSY,PENSX,PENY,PENX);
 	draw_pen();
 
-	megask_init();
 
 new_doska:
 	doska(w,b,d);
