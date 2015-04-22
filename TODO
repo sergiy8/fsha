@@ -4,4 +4,4 @@ _permut 2 permut
 byte-streamed klini
 twobits - avoid two access
 malloc - FMODE_TMP
-asciiart - mouse to change figure
+enum position status

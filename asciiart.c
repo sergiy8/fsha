@@ -107,9 +107,12 @@ const char * summary(void){
 	switch(value) {
 		default: return "InternalError";
 		case 0:
-			if(arank==8)
-				return "Draw?";
-			else {
+			if(arank==8) {
+				if(_popc(w) != 4)
+					return "8-NotInBase";
+				else
+					return "Draw?";
+			} else {
 				wattron(wask,COLOR_PAIR(COLOR_YELLOW));
 				return "Draw";
 			}
@@ -124,6 +127,10 @@ const char * summary(void){
 			return "DrawAfterTakege";
 		case 4:
 			return "NotInBase";
+		case 5:
+			return "CommunicationError";
+		case 6:
+			return "MegaskBitcontrol";
 	}
 }
 

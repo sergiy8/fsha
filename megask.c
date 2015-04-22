@@ -1,3 +1,11 @@
+static inline int megask_bitcontrol(uint32_t b, uint32_t w, uint32_t d) {
+	int arank = _popc(b);
+	if( 32 - __builtin_clz(w) > arank)
+		return -1;
+	if( 32 - __builtin_clz(d) > arank)
+		return -1;
+	return 0;
+}
 #if MEGASK_REMOTE
 #include <unistd.h>
 #include <sys/socket.h>
@@ -52,6 +60,8 @@ static int megask(uint32_t busy, uint32_t iwhite,uint32_t idamka) {
 	int arank = __builtin_popcount(busy);
 	if(known[arank]==NULL)
 		return 4;
+	if (megask_bitcontrol(busy,iwhite,idamka))
+		return 6;
     uint32_t  idx  = blist_get(busy);
     return twobit_get(known[arank] + (uint64_t)((iwhite<<arank) | idamka) * cnk(32,arank)/4, idx);
 }
