@@ -8,58 +8,64 @@
 #include "pack.h"
 #include "getarg.h"
 
+#include "megask.c"
+
 enum { COLOR_SUCCESS=1, COLOR_FAIL, COLOR_DRAW};
 
 #define remove_bit(x,n)   x = ((x & ~ALLONE((n)+1)) >> 1) | (x & ALLONE(n))
 #define insert_bit(x,n,b) x = ((x & ~ALLONE(n))<<1) | (!!(b) << (n)) | (x & ALLONE(n))
 
-static char pens[] = "wbWB";
+static char pens[] = "wbWBC";
 static int pen = 0;
 static char * pens_prompt = "Pen:";
 
 static WINDOW * wdoska, *whex, *wlog, *wask, *whelp, *wpen;
 #define putlog(fmt,args...) do{wprintw(wlog,fmt"\n",##args); wrefresh(wlog);}while(0)
 
-#if 0
-uint32_t b = 0xfff00fff;
-uint32_t w = 0x00000fff;
-#else
-uint32_t b = 0x00f00f00;
-uint32_t w = 0x0000000f;
-#endif
-uint32_t d = 0;
+static uint32_t b,w,d;
 
-#define DOSKAY ((LINES-8)/2)
-#define DOSKAX 4
-#define DOSKASY 8
-#define DOSKASX 12
+#define MAXFUTURE 40
+static int maxfuture = 0;
+static struct {
+	uint32_t b,w,d;
+	WINDOW * doska;
+} future[MAXFUTURE];
 
-#define HEXY (DOSKAY + DOSKASY - 1)
-#define HEXX (DOSKAX + DOSKASX + 8)
-#define HEXSY 1
-#define HEXSX 20
-
-#define LOGY (HEXY+2)
-#define LOGX 0
-#define LOGSY (LINES-LOGY)
-#define LOGSX COLS
-
-#define ASKY DOSKAY
-#define ASKX HEXX
-#define ASKSY 3
-#define ASKSX 20
-
-#define HELPY 1
-#define HELPX 1
+#define HELPY 0
+#define HELPX 0
 #define HELPSY 10
 #define HELPSX 40
 
-#define PENY (DOSKAY-2)
+#define PENY (HELPY + HELPSY + 1)
 #define PENX 1
 #define PENSY 1
 #define PENSX (__builtin_strlen(pens_prompt) + __builtin_strlen(pens))
 
-#include "megask.c"
+#define DOSKAY (PENY + PENSY)
+#define DOSKAX 4
+#define DOSKASY 8
+#define DOSKASX 12
+
+#define ASKY DOSKAY
+#define ASKX (DOSKAX + DOSKASX + 3)
+#define ASKSY 3
+#define ASKSX 20
+
+#define HEXY (DOSKAY + DOSKASY - 1)
+#define HEXX ASKX
+#define HEXSY 1
+#define HEXSX ASKSX
+
+#define LOGY (DOSKAY + DOSKASY + 1)
+#define LOGX 0
+#define LOGSY (LINES-LOGY)
+#define LOGSX 40
+
+#define FUTUREY 0
+#define FUTUREX (HEXX + HEXSX + 1)
+#define FUTURESY (DOSKASY+2)
+#define FUTURESX (DOSKASX+4)
+
 
 static void draw_pen(void){
 	int i;
@@ -74,7 +80,7 @@ static void draw_pen(void){
 	wrefresh(wpen);
 }
 
-static void doska(uint32_t w, uint32_t b, uint32_t d){
+static void doska(WINDOW * wdoska, uint32_t b, uint32_t w, uint32_t d){
 	int i,j;
 	char pole[32]={};
 	while(b) {
@@ -134,12 +140,54 @@ const char * summary(void){
 	}
 }
 
+static int revert_ask(int x) {
+	if(x==1)
+		return 2;
+	if(x==2)
+		return 1;
+	return x;
+}
+
+#define MOVE_FIND_ALL 1
+int MoveBlack(uint32_t b, uint32_t w, uint32_t d){
+	if (maxfuture >= MAXFUTURE ) {
+		putlog("Max=%d, Ign wbd=%08X %08X %08X",MAXFUTURE, w, b, d);
+		return 0;
+	}
+	const int perline = (COLS - FUTUREX ) / FUTURESX;
+	Pack( &future[maxfuture].b, &future[maxfuture].w, &future[maxfuture].d, (w), (b), (d));
+	if (perline) {
+		if(future[maxfuture].doska == NULL )
+			future[maxfuture].doska = newwin(FUTURESY,FUTURESX,
+				FUTUREY + (maxfuture / perline )*FUTURESY,
+				FUTUREX + (maxfuture % perline)*FUTURESX);
+		WINDOW * this = future[maxfuture].doska;
+		uint32_t x,y,z;
+		Pack(&x,&y,&z,_brev(b),_brev(w),_brev(d));
+		int value = revert_ask(megask(x,y,z));
+		if(value == 1)
+			wattron(this,COLOR_PAIR(COLOR_SUCCESS));
+		else if (value == 2)
+			wattron(this,COLOR_PAIR(COLOR_FAIL));
+		mvwprintw(this,DOSKASY,0,"%X %X %X=%d", future[maxfuture].b, future[maxfuture].w, future[maxfuture].d, value);
+		wattrset(this,0);
+		doska(this, future[maxfuture].b, future[maxfuture].w, future[maxfuture].d);
+	}
+	maxfuture++;
+	return 0;
+}
+#include "move4.c"
+
 int main(int argc, char ** argv){
 	if (argc == 4 ) {
 		b = getarg(1);
 		w = getarg(2);
 		d = getarg(3);
-	} else if (argc!=1) {
+	} else if (argc==1) {
+		b = 0x00f00f00;
+		w = 0xf;
+		d = 0;
+	} else {
 		error("Three args!");
 	}
 
@@ -182,7 +230,7 @@ int main(int argc, char ** argv){
 
 
 new_doska:
-	doska(w,b,d);
+	doska(wdoska, b,w,d);
 
 	wattrset(wask,0);
 	mvwprintw(wask, 0, 0, "Megask: %d", megask(b,w,d));
@@ -190,6 +238,17 @@ new_doska:
 	mvwprintw(wask, 2, 0, "%s",summary());
 	wclrtobot(wask);
 	wrefresh(wask);
+
+	{ uint32_t x,y,z;
+	  for(x=0;x<maxfuture;x++){
+		werase(future[x].doska);
+	    wrefresh(future[x].doska);
+	  }
+	  maxfuture=0;
+	  Unpack(b,w,d,&x,&y,&z);
+	  //putlog("%08X %X %X unpacked =  %08X %08X %08X",b,w,d,x,y,z);
+	  MoveWhite(x,y,z);
+	}
 
 	char str[HEXSX];
 	int pos=0;
@@ -219,42 +278,40 @@ new_doska:
 					continue;
 				str[pos++] = c;
 				continue;
-			case 0x104: // Left
+			case KEY_LEFT:
 				if(pos) pos--;
-				continue; // Right
-			case 0x105:
+				continue;
+			case KEY_RIGHT:
 				if(str[pos]==0)
 					continue;
 				pos++;
 				continue;
 			case 0x0a:
 				wclrtobot(whex);
-				putlog("=%s=",str);
 				pos=0;
-				{ uint32_t b2,w2,d2;
-				  if(sscanf(str,"%x%x%x",&b2,&w2,&d2)!=3) {
+				{ uint32_t b2,w2,d2,e2;
+				  if(sscanf(str,"%x%x%x%x",&b2,&w2,&d2,&e2)!=3) {
 						putlog("Syntax:%s",str);
 						continue;
 				  }
 				  b = b2;
 				  w = w2;
 				  d = d2;
-				  putlog("%08X %X %X",b,w,d);
 				  goto new_doska;
 				}
-			case 0x150: // shift - down
+			case KEY_SF: // shift - down
 				if (b&0xf) continue;
 				b>>=4;
 				goto new_doska;
-			case 0x151: // shift-up
+			case KEY_SR: // shift-up
 				if (b&0xf0000000) continue;
 				b<<=4;
 				goto new_doska;
-			case 0x192: //shift-right
+			case KEY_SRIGHT: //shift-right
 				if( b&0x88888888) continue;
 				b<<=1;
 				goto new_doska;
-			case 0x189: //shift-left
+			case KEY_SLEFT: //shift-left
 				if(b&0x11111111) continue;
 				b>>=1;
 				goto new_doska;
@@ -264,20 +321,38 @@ new_doska:
 				  uw = _brev(uw);
 				  ub = _brev(ub);
 				  ud = _brev(ud);
-				  Pack(&b,&w,&d,uw,ub,ud);
-				  w ^= ALLONE(_popc(b));
+				  Pack(&b,&w,&d,ub,uw,ud);
 				}
 				goto new_doska;
 			case KEY_MOUSE:
 				if(getmouse(&event) != OK) continue;
 				if(!(event.bstate & NCURSES_BUTTON_CLICKED)) continue;
+				//PEN
 				if (wmouse_trafo(wpen, &event.y, &event.x, FALSE)){
 					if(event.x < __builtin_strlen(pens_prompt))
 						continue;
-					pen = event.x - __builtin_strlen(pens_prompt);
+					int new_pen = event.x - __builtin_strlen(pens_prompt);
+					switch(pens[new_pen]) {
+						default: break;
+						case 'C':
+							b = w = d = 0;
+							goto new_doska;
+					}
+					pen = new_pen;
 					draw_pen();
 					continue;
 				}
+				// FUTURE
+				{ int x;
+					for(x=0;x<maxfuture;x++)
+					if(wmouse_trafo(future[x].doska, &event.y, &event.x, FALSE)) {
+						b = future[x].b;
+						w = future[x].w;
+						d = future[x].d;
+						goto new_doska;
+					}
+				}
+				//DOSKA
 				if (!wmouse_trafo(wdoska, &event.y, &event.x, FALSE)) continue;
 				if (event.y & 1)
 					event.x+=2;
@@ -285,7 +360,6 @@ new_doska:
 					continue;
 				{   int p = (7 - event.y) * 4 + event.x / 3;
 					int num = _popc(b & ALLONE(p));
-					putlog("%d num=%d", p, num);
 					if( (b & (1<<p)) == 0) { // New
 						b |= 1<<p;
 						insert_bit(w,num,pen==0 || pen==2);
@@ -298,6 +372,21 @@ new_doska:
 					remove_bit(d,num);
 					goto new_doska;
 				}
+				goto new_doska;
+			case KEY_RESIZE:
+				if(COLS <= FUTUREX || LINES <= LOGY )
+					continue;
+				{ int x;
+	  			for(x=0;x<maxfuture;x++){
+					werase(future[x].doska);
+	    			wrefresh(future[x].doska);
+					delwin(future[x].doska);
+					future[x].doska=NULL;
+	  			}
+				}
+	  			maxfuture=0;
+				wresize(wlog,LOGSY,LOGSX);
+				putlog("resize");
 				goto new_doska;
 		}
 	}
