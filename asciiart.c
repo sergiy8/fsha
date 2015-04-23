@@ -15,7 +15,7 @@ enum { COLOR_SUCCESS=1, COLOR_FAIL, COLOR_DRAW};
 #define remove_bit(x,n)   x = ((x & ~ALLONE((n)+1)) >> 1) | (x & ALLONE(n))
 #define insert_bit(x,n,b) x = ((x & ~ALLONE(n))<<1) | (!!(b) << (n)) | (x & ALLONE(n))
 
-static char pens[] = "wbWBC";
+static char pens[] = "xyXYC";
 static int pen = 0;
 static char * pens_prompt = "Pen:";
 
@@ -23,6 +23,7 @@ static WINDOW * wdoska, *whex, *wlog, *wask, *whelp, *wpen;
 #define putlog(fmt,args...) do{wprintw(wlog,fmt"\n",##args); wrefresh(wlog);}while(0)
 
 static uint32_t b,w,d;
+static int rotate = 0;
 
 #define MAXFUTURE 40
 static int maxfuture = 0;
@@ -48,7 +49,7 @@ static struct {
 
 #define ASKY DOSKAY
 #define ASKX (DOSKAX + DOSKASX + 3)
-#define ASKSY 3
+#define ASKSY 4
 #define ASKSX 20
 
 #define HEXY (DOSKAY + DOSKASY - 1)
@@ -85,7 +86,7 @@ static void doska(WINDOW * wdoska, uint32_t b, uint32_t w, uint32_t d){
 	char pole[32]={};
 	while(b) {
 		int i = __builtin_ffs(b) - 1;
-        pole[i] = w&1? 'w' : 'b';
+        pole[i] = (w&1)^rotate? 'x' : 'y';
         if(d&1) pole[i] ^= 0x20;
 		w/=2;
 		d/=2;
@@ -194,6 +195,7 @@ int main(int argc, char ** argv){
 	megask_init();
 
 	setlocale(LC_ALL,"");
+new_screen:
 	initscr();
 
 	start_color();
@@ -233,9 +235,10 @@ new_doska:
 	doska(wdoska, b,w,d);
 
 	wattrset(wask,0);
-	mvwprintw(wask, 0, 0, "Megask: %d", megask(b,w,d));
-	mvwprintw(wask, 1, 0, "Arank : %d-%d", _popc(b),_popc(w));
-	mvwprintw(wask, 2, 0, "%s",summary());
+	mvwprintw(wask, 0, 0, "Move: %c", rotate?'Y':'X');
+	mvwprintw(wask, 1, 0, "Megask: %d", megask(b,w,d));
+	mvwprintw(wask, 2, 0, "Arank : %d-%d", _popc(b),_popc(w));
+	mvwprintw(wask, 3, 0, "%s",summary());
 	wclrtobot(wask);
 	wrefresh(wask);
 
@@ -316,6 +319,7 @@ new_doska:
 				b>>=1;
 				goto new_doska;
 			case 9:
+				do_rotate:
 				{ uint32_t ub,uw,ud;
 				  Unpack(b,w,d,&uw,&ub,&ud);
 				  uw = _brev(uw);
@@ -323,6 +327,7 @@ new_doska:
 				  ud = _brev(ud);
 				  Pack(&b,&w,&d,ub,uw,ud);
 				}
+				rotate^=1;
 				goto new_doska;
 			case KEY_MOUSE:
 				if(getmouse(&event) != OK) continue;
@@ -336,6 +341,7 @@ new_doska:
 						default: break;
 						case 'C':
 							b = w = d = 0;
+							rotate = 0;
 							goto new_doska;
 					}
 					pen = new_pen;
@@ -349,7 +355,7 @@ new_doska:
 						b = future[x].b;
 						w = future[x].w;
 						d = future[x].d;
-						goto new_doska;
+						goto do_rotate;
 					}
 				}
 				//DOSKA
@@ -362,7 +368,7 @@ new_doska:
 					int num = _popc(b & ALLONE(p));
 					if( (b & (1<<p)) == 0) { // New
 						b |= 1<<p;
-						insert_bit(w,num,pen==0 || pen==2);
+						insert_bit(w,num,rotate ^ !!(pen==0 || pen==2));
 						insert_bit(d,num,pen>1);
 						goto new_doska;
 					}
@@ -376,18 +382,14 @@ new_doska:
 			case KEY_RESIZE:
 				if(COLS <= FUTUREX || LINES <= LOGY )
 					continue;
-				{ int x;
-	  			for(x=0;x<maxfuture;x++){
-					werase(future[x].doska);
-	    			wrefresh(future[x].doska);
-					delwin(future[x].doska);
-					future[x].doska=NULL;
-	  			}
+				for(;maxfuture;maxfuture--) {
+					werase(future[maxfuture].doska);
+					wrefresh(future[maxfuture].doska);
+					delwin(future[maxfuture].doska);
+					future[maxfuture].doska = 0;
 				}
-	  			maxfuture=0;
-				wresize(wlog,LOGSY,LOGSX);
-				putlog("resize");
-				goto new_doska;
+				endwin();
+				goto new_screen;
 		}
 	}
 	endwin();
