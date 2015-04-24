@@ -184,12 +184,19 @@ int main(int argc, char ** argv){
 		b = getarg(1);
 		w = getarg(2);
 		d = getarg(3);
+	} else if (argc==2) {
+		FILE * f = fopen(argv[1],"r");
+		if(f==NULL)
+			error("Is it file:%s",argv[1]);
+		if(fscanf(f,"%x%x%x",&b,&w,&d)!=3)
+			error("%s format error",argv[1]);
+		fclose(f);
 	} else if (argc==1) {
 		b = 0x00f00f00;
 		w = 0xf;
 		d = 0;
 	} else {
-		error("Three args!");
+		error("File name - or Three args!");
 	}
 
 	megask_init();
