@@ -1,9 +1,9 @@
 static inline int megask_bitcontrol(uint32_t b, uint32_t w, uint32_t d) {
 	int arank = _popc(b);
-	if( 32 - __builtin_clz(w) > arank)
+	if(( 32 - _clz(w) > arank) || ( 32 - _clz(d) > arank) ){
+		putlog("megask_bitcontrol: %08X %X %X,clz(d)=%d",b,w,d,_clz(d));
 		return -1;
-	if( 32 - __builtin_clz(d) > arank)
-		return -1;
+	}
 	return 0;
 }
 #if MEGASK_REMOTE
@@ -46,13 +46,19 @@ static void megask_init(void) {
 	char fname[PATH_MAX];
 
 	blist_init();
+	struct stat buf;
 
-	for(i=0;i<10;i++) {
-		struct stat buf;
+	for(i=0;i<9;i++) {
 		snprintf(fname,sizeof(fname),DATA_FORMAT,i);
 		if(stat(fname,&buf))
 			continue;
 		known[i] = (unsigned char*)malloc_file(ARRAY_SIZE_S(i),FMODE_RO,DATA_FORMAT,i);
+	}
+	for(i=9;i<25;i++) {
+		snprintf(fname,sizeof(fname),DATA_FORMAT,i);
+		if(stat(fname,&buf))
+			continue;
+		known[i] = (unsigned char*)malloc_file(cnk(32,i)<<(i-2),FMODE_RO,DATA_FORMAT,i);
 	}
 }
 
@@ -63,6 +69,12 @@ static int megask(uint32_t busy, uint32_t iwhite,uint32_t idamka) {
 		return 4;
 	if (megask_bitcontrol(busy,iwhite,idamka))
 		return 6;
+	if (arank == 9 ) {
+		if(idamka)
+			return 4;
+    	uint32_t  idx  = blist_get(busy);
+    	return twobit_get(known[arank] + (uint64_t)iwhite * cnk(32,arank)/4, idx);
+	}
     uint32_t  idx  = blist_get(busy);
     return twobit_get(known[arank] + (uint64_t)((iwhite<<arank) | idamka) * cnk(32,arank)/4, idx);
 }

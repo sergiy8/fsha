@@ -8,6 +8,8 @@
 #include "pack.h"
 #include "getarg.h"
 
+static WINDOW * wdoska, *whex, *wlog, *wask, *whelp, *wpen;
+#define putlog(fmt,args...) do{wprintw(wlog,fmt"\n",##args); wrefresh(wlog);}while(0)
 #include "megask.c"
 
 enum { COLOR_SUCCESS=1, COLOR_FAIL, COLOR_DRAW};
@@ -19,8 +21,6 @@ static char pens[] = "xyXYC";
 static int pen = 0;
 static char * pens_prompt = "Pen:";
 
-static WINDOW * wdoska, *whex, *wlog, *wask, *whelp, *wpen;
-#define putlog(fmt,args...) do{wprintw(wlog,fmt"\n",##args); wrefresh(wlog);}while(0)
 
 static uint32_t b,w,d;
 static int rotate = 0;

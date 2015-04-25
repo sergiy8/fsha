@@ -11,7 +11,7 @@ export CC := gcc -Wall -DRANK=${RANK} $(if ${WRANK},-DWRANK=${WRANK}) $(if ${NOD
 CC += -Wno-multichar
 CC += -march=native -Ofast
 CC += -DDATADIR=\"${DATADIR}/\"
-#CC += -DDEBUG
+CC += -DBLIST_NOFILE=1
 CC += -DNPROC=$(NPROC)
 
 -include cudablin/cuda_gpu.mk
@@ -41,9 +41,6 @@ CUTILS := mk_data before after
 ifneq (${RANK},9)
 WRANK_LIST := $(shell "seq" $$((${RANK}-1)))
 else
-ifeq (${WRANK},)
-$(error WRANK should be set in WFILE mode)
-endif
 WRANK_LIST:= ${WRANK}
 endif
 $(info WRANK_LIST=${WRANK_LIST})
@@ -81,7 +78,7 @@ select.inc: plugin_select Makefile
 
 NCURSES_LIBS := $(shell ncurses5-config --libs)
 asciiart: asciiart.c Makefile ${INCS}
-	${CC} $< -DMEGASK_REMOTE=1 ${NCURSES_LIBS} -o$@
+	${CC} $< -DMEGASK_REMOTE=0 ${NCURSES_LIBS} -o$@
 
 $(addprefix c,${CUTILS}) : c% : %.kernel cudamain.cpp cudablin/cudablin.h ${INCS}
 	${NVCC} -DIN_$* -o $@ -include sha.h -include $*.kernel cudamain.cpp  ${CUDALIBS}

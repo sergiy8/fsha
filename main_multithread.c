@@ -19,12 +19,16 @@ static uintmax_t total;
 static uintmax_t oldtotal; // for glukalo
 #endif
 
-static unsigned i[NPROC], j[NPROC];
+static volatile unsigned i[NPROC], j[NPROC];
 
 static void * thread(void * arg){
 	unsigned char * job = array;
 	const unsigned int n = (uintptr_t)arg;
+#if NODAMKA
+	i[n]=0; {
+#else
 	for(i[n]=0;i[n]<(1<<RANK);i[n]++) {
+#endif
 #if defined(WRANK)
 	  if(_popc(i[n])==WRANK)
 #endif
@@ -43,6 +47,8 @@ static void glukalo(int s){
 	else
 #if WRANK
 	tprintf("%s %3X %3X",percent((blist_get(i[0])<<RANK) | j[0],cnk(RANK,WRANK)<<RANK),i[0],j[0]);
+#elif NODAMKA
+	tprintf("%s",percent(j[0],1<<RANK));
 #else
 	tprintf("%s %2X %2X",percent((i[0]<<RANK) | j[0],1<<(2*RANK)),i[0],j[0]);
 #endif
@@ -98,7 +104,11 @@ int main(int argc, char ** argv){
 #define FMODE FMODE_RW
 #endif
 
+#if NODAMKA
+	array = malloc_file(JOB_SIZE<<RANK,FMODE,DATA_FORMAT,RANK);
+#else
 	array = malloc_file(ARRAY_SIZE_S(RANK),FMODE,DATA_FORMAT,RANK);
+#endif
 
 	time(&started);
 	signal(SIGALRM,glukalo);
