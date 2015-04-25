@@ -1,23 +1,24 @@
+#define BLIST_NOFILE 1
 #include "sha.h"
 #include "getarg.h"
-#include "malloc_file.c"
+
+static uint32_t nblist(uint32_t x) {
+	uint32_t res = 0;
+	uint32_t p;
+	int arank;
+    for(arank=_popc(x);arank;x^=1<<(31-p),arank--) {
+		p = _clz(x);
+printf("x=%08X p=%d arank=%d\n",x,p,arank);
+		res += cnk(31-p,arank);
+	}
+	return res;
+}
 
 int main(int argc, char ** argv){
 
- int rank = getarg(1);
+ int x = getarg(1);
 
-	uint32_t * blist = malloc_file(sizeof(uint32_t)*cnk[rank],FMODE_RO,BLIST_FORMAT,rank);
-	uint32_t * nblist = malloc_file(sizeof(uint32_t)<<32l,FMODE_RO,BLIST_NAME);
-
-	if (nblist[0] != BLIST_MAGIC) {
-		printf("%s magic error, expected %08X, have %08x\n", BLIST_NAME,BLIST_MAGIC,nblist[0]);
-		return -1;
-	}
-	int i;
-	for (i=0;i<cnk[rank];i++)
-		if (nblist[blist[i]] != i ) {
-			printf("i=%d blist[i]=%08X nblist[blist[i]=%d\n",i,blist[i],nblist[blist[i]]);
-		return -1;
-	}
+	blist_init();
+	printf("%08X = %d = %d\n", x, blist_get(x), nblist(x));
 	return 0;
 }

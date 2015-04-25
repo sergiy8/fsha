@@ -13,6 +13,31 @@
 //16 30	 601080390
 //17 30	 565722720
 
+#if 1
+#define blist_init() do{}while(0)
+static inline uint32_t blist_get(uint32_t x) {
+    uint32_t res = 0;
+    uint32_t p;
+    int arank;
+    for(arank=_popc(x);arank;x^=1<<(31-p),arank--) {
+        p = _clz(x);
+        res += cnk(31-p,arank);
+    }
+    return res;
+}
+#else
+
+#if BLIST_NOFILE
+#define blist_init() do{}while(0)
+static inline uint32_t blist_get(uint32_t x) {
+	uint32_t res;
+	uint32_t i;
+	for(i=0,res=ALLONE(_popc(x));;res=_permut(res),i++)
+		if(res == x)
+			return i;
+}
+#else
+
 #if RANK > 8
 #define BLIST_BITS 32
 #else
@@ -36,5 +61,6 @@ DATATYPE uint32_t * blist __attribute__((unused));
 #endif
 
 #define BLIST_SIZE (sizeof(blist[0])<<32)
-
 #define blist_init() do{blist = malloc_file(BLIST_SIZE,FMODE_RO,BLIST_NAME);}while(0)
+#endif // BLIST_NOFILE
+#endif //BLIST_FILE

@@ -44,3 +44,5 @@ v = ( v >> 16             ) | ( v               << 16);
 	return v;
 }
 #endif
+
+#define _clz(x) ((x)?__builtin_clz(x):32)
