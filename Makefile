@@ -3,11 +3,11 @@ NPROC ?= $(shell grep -ic Processor /proc/cpuinfo)
 MAKEFLAGS = -j $(NPROC)
 RANK ?= 8
 ifeq (${RANK},9)
-WRANK ?= 1
+NODAMKA ?= 1
 endif
 export DATADIR := $(realpath ../data/)
 
-export CC := gcc -Wall -DRANK=${RANK} $(if ${WRANK},-DWRANK=${WRANK})
+export CC := gcc -Wall -DRANK=${RANK} $(if ${WRANK},-DWRANK=${WRANK}) $(if ${NODAMKA},-DNODAMKA=${NODAMKA})
 CC += -Wno-multichar
 CC += -march=native -Ofast
 CC += -DDATADIR=\"${DATADIR}/\"

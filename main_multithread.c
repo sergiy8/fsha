@@ -6,6 +6,10 @@
 #include "malloc_file.c"
 #include "percent.h"
 
+#if WRANK || IN_before || IN_klini
+#define NEED_BLIST 1
+#endif
+
 #define GINTERVAL 60
 
 static time_t started;
@@ -15,30 +19,17 @@ static uintmax_t total;
 static uintmax_t oldtotal; // for glukalo
 #endif
 
-static void * threadN(void * arg){
-	unsigned i,j;
-	unsigned char * job = array;
-	for(i=0;i<(1<<RANK);i++) {
-#if defined(WRANK)
-	  if(_popc(i)==WRANK)
-#endif
-		for(j=(uintptr_t)arg;j<(1<<RANK);j+=NPROC){
-			kernel((i<<RANK)|j, job + JOB_SIZE * j);
-		}
-		job += JOB_SIZE << RANK;
-	}
-	return NULL;
-}
+static unsigned i[NPROC], j[NPROC];
 
-static volatile unsigned i0,j0;
-static void * thread0(void * arg){
+static void * thread(void * arg){
 	unsigned char * job = array;
-	for(i0=0;i0<(1<<RANK);i0++) {
+	const unsigned int n = (uintptr_t)arg;
+	for(i[n]=0;i[n]<(1<<RANK);i[n]++) {
 #if defined(WRANK)
-	  if(_popc(i0)==WRANK)
+	  if(_popc(i[n])==WRANK)
 #endif
-		for(j0=0;j0<(1<<RANK);j0+=NPROC){
-			kernel((i0<<RANK)|j0, job + JOB_SIZE * j0);
+		for(j[n]=n;j[n]<(1<<RANK);j[n]+=NPROC){
+			kernel((i[n]<<RANK)|j[n], job + JOB_SIZE * j[n]);
 		}
 		job += JOB_SIZE << RANK;
 	}
@@ -47,13 +38,13 @@ static void * thread0(void * arg){
 
 static void glukalo(int s){
 	alarm(GINTERVAL);
-	if (i0 >= (1<<RANK))
+	if (i[0] >= (1<<RANK))
 		tprintf("100%%");
 	else
 #if WRANK
-	tprintf("%s %3X %3X",percent((blist_get(i0)<<RANK) | j0,cnk(RANK,WRANK)<<RANK),i0,j0);
+	tprintf("%s %3X %3X",percent((blist_get(i[0])<<RANK) | j[0],cnk(RANK,WRANK)<<RANK),i[0],j[0]);
 #else
-	tprintf("%s %2X %2X",percent((i0<<RANK) | j0,1<<(2*RANK)),i0,j0);
+	tprintf("%s %2X %2X",percent((i[0]<<RANK) | j[0],1<<(2*RANK)),i[0],j[0]);
 #endif
 #ifndef IN_stat
 	uintmax_t total = 0;
@@ -115,7 +106,7 @@ int main(int argc, char ** argv){
 for(;;) {
 	alarm(GINTERVAL);
 	for(i=0;i<NPROC;i++){
-			pthread_create(pid + i,NULL,i?threadN:thread0,(void*)(uintptr_t)i);
+			pthread_create(pid + i,NULL,thread,(void*)(uintptr_t)i);
 	}
 	for(i=0;i<NPROC;i++){
 			pthread_join(pid[i], NULL);

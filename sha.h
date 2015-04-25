@@ -41,7 +41,6 @@
 
 #define JOB_SIZE ((uint64_t)(cnk(32,RANK)/4))
 #define ARRAY_SIZE_S(rank) (((uint64_t)(cnk(32,rank))<<(2*(rank)))/4)
-#define ARRAY_SIZE_W(rank,wrank) (((uint64_t)(cnk(32,rank))<<(rank))*cnk(rank,wrank)/4)
 
 #define STATFILE_FORMAT DATADIR"stat%d"
 #define STATFILE(r) ({char _loc[256]; snprintf(_loc,sizeof(_loc),STATFILE_FORMAT,r);_loc;})
