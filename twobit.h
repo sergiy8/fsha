@@ -1,7 +1,3 @@
-#if RANK > 16
-#error Change num to uint64_t
-#endif
-
 #define twobit_t unsigned char
 #define PER_T (4*sizeof(twobit_t))
 

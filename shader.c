@@ -4,7 +4,10 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
+#undef RANK
+#define RANK 24
 #include "sha.h"
+#include "blist.h"
 
 #undef MEGASK_REMOTE
 #include "megask.c"
@@ -16,7 +19,17 @@ static void * dialogue(void * arg) {
 	for(;;) {
 		if(read(fd,&req,sizeof(req)) != sizeof(req))
 			break;
-		resp.value = megask(le32toh(req.b), le32toh(req.w), le32toh(req.d));
+		switch(le32toh(req.cmd)) {
+		default:
+			resp.value = -1;
+			break;
+		case SHA_BXD:
+			resp.value = megask(le32toh(req.b), le32toh(req.w), le32toh(req.d));
+			break;
+		case SHA_BLIST:
+			resp.value = blist_get(le32toh(req.b));
+			break;
+		}
 		resp.value = htole32(resp.value);
 		if (write(fd,&resp,sizeof(resp)) != sizeof(resp))
 			break;

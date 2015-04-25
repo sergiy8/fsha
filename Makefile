@@ -8,13 +8,11 @@ endif
 export DATADIR := $(realpath ../data/)
 
 export CC := gcc -Wall -DRANK=${RANK} $(if ${WRANK},-DWRANK=${WRANK})
+CC += -Wno-multichar
 CC += -march=native -Ofast
 CC += -DDATADIR=\"${DATADIR}/\"
 #CC += -DDEBUG
 CC += -DNPROC=$(NPROC)
-
-CC += -DMEGASK_REMOTE
-
 
 -include cudablin/cuda_gpu.mk
 NVCC:= nvcc -Xptxas -v ${CUDA_GPU} -DRANK=${RANK}
@@ -83,7 +81,7 @@ select.inc: plugin_select Makefile
 
 NCURSES_LIBS := $(shell ncurses5-config --libs)
 asciiart: asciiart.c Makefile ${INCS}
-	${CC} -Wall $< ${NCURSES_LIBS} -o$@
+	${CC} $< -DMEGASK_REMOTE=1 ${NCURSES_LIBS} -o$@
 
 $(addprefix c,${CUTILS}) : c% : %.kernel cudamain.cpp cudablin/cudablin.h ${INCS}
 	${NVCC} -DIN_$* -o $@ -include sha.h -include $*.kernel cudamain.cpp  ${CUDALIBS}
