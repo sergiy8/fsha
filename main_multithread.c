@@ -18,12 +18,8 @@ static uintmax_t oldtotal; // for glukalo
 static void * threadN(void * arg){
 	unsigned i,j;
 	unsigned char * job = array;
-#if WFILES
-	for(i=ALLONE(WRANK);i<(1<<RANK);i=_permut(i)){
-#else
 	for(i=0;i<(1<<RANK);i++) {
-#endif
-#if defined(WRANK) && ! defined(WFILES)
+#if defined(WRANK)
 	  if(_popc(i)==WRANK)
 #endif
 		for(j=(uintptr_t)arg;j<(1<<RANK);j+=NPROC){
@@ -37,12 +33,8 @@ static void * threadN(void * arg){
 static volatile unsigned i0,j0;
 static void * thread0(void * arg){
 	unsigned char * job = array;
-#if WFILES
-	for(i0=ALLONE(WRANK);i0<(1<<RANK);i0=_permut(i0)){
-#else
 	for(i0=0;i0<(1<<RANK);i0++) {
-#endif
-#if defined(WRANK) && ! defined(WFILES)
+#if defined(WRANK)
 	  if(_popc(i0)==WRANK)
 #endif
 		for(j0=0;j0<(1<<RANK);j0+=NPROC){
@@ -50,10 +42,6 @@ static void * thread0(void * arg){
 		}
 		job += JOB_SIZE << RANK;
 	}
-#if WFILES
-	if( job != array + ((((uintptr_t)cnk(RANK,WRANK))*JOB_SIZE) << RANK))
-		panic();
-#endif
 	return NULL;
 }
 
@@ -117,15 +105,7 @@ int main(int argc, char ** argv){
 #define FMODE FMODE_RW
 #endif
 
-#if WFILES
-	array = malloc_file(ARRAY_SIZE_W(RANK,WRANK),FMODE,DATA_FORMAT_W,RANK,WRANK);
-#else
 	array = malloc_file(ARRAY_SIZE_S(RANK),FMODE,DATA_FORMAT,RANK);
-#endif
-
-#if WFILES && defined(IN_klini) && (WRANK != RANK/2)
-	carray = malloc_file(ARRAY_SIZE_W(RANK,WRANK),FMODE_RO,DATA_FORMAT_W,RANK,RANK-WRANK);
-#endif
 
 	time(&started);
 	signal(SIGALRM,glukalo);
@@ -171,11 +151,7 @@ for(;;) {
 	  }
 	if(option_v)
 		tprintf("%1d %4ju %4ju %4ju %4ju\n",RANK,total[0],total[1],total[2],total[3]);
-#if WFILES
-	printf("%1d-%1d %s %s %s %s ",RANK,WRANK,itoa(total[0]),itoa(total[1]),itoa(total[2]),itoa(total[3]));
-#else
 	printf("%1d %s %s %s %s ",RANK,itoa(total[0]),itoa(total[1]),itoa(total[2]),itoa(total[3]));
-#endif
 	}
 	syslog(LOG_INFO,"finished");
 #else

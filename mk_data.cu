@@ -14,7 +14,6 @@ KERNEL
 		   atomicAdd(changed + ij%CACHESIZE,1);
 			continue;
 		}
-#ifndef WFILES
 		if ( i == 0) {
 		   twobit_set(job,idx,2);
 			continue;
@@ -23,7 +22,6 @@ KERNEL
 		   twobit_set(job,idx,1);
 			continue;
 		}
-#endif
 	}
 }
 

@@ -16,10 +16,6 @@
 #define NPROC 1
 #endif
 
-#if RANK > 8
-#define WFILES 1
-#endif
-
 #include "arch.h"
 #include "permut.h"
 #include "twobit.h"
