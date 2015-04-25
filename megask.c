@@ -24,6 +24,7 @@ struct sockaddr_in servaddr = {
 }
 static int megask(uint32_t busy, uint32_t iwhite,uint32_t idamka) {
 	struct sha_req req = {
+		.cmd = htole32(SHA_BXD),
 		.b = htole32(busy),
 		.w = htole32(iwhite),
 		.d = htole32(idamka),
@@ -42,9 +43,9 @@ static unsigned char * known [32];
 
 static void megask_init(void) {
 	int i;
-	char fname[1024];
+	char fname[PATH_MAX];
 
-	blist = malloc_file(BLIST_SIZE,FMODE_RO,BLIST_NAME);
+	blist_init();
 
 	for(i=0;i<10;i++) {
 		struct stat buf;

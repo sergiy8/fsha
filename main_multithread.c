@@ -95,7 +95,9 @@ int main(int argc, char ** argv){
 	}
 #endif
 
-	blist = malloc_file(BLIST_SIZE,FMODE_RO,BLIST_NAME);
+#if WRANK || IN_klini || IN_before
+	blist_init();
+#endif
 
 #if   IN_mk_data
 #define FMODE FMODE_CR

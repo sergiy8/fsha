@@ -36,3 +36,5 @@ DATATYPE uint32_t * blist __attribute__((unused));
 #endif
 
 #define BLIST_SIZE (sizeof(blist[0])<<32)
+
+#define blist_init() do{blist = malloc_file(BLIST_SIZE,FMODE_RO,BLIST_NAME);}while(0)
