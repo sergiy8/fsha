@@ -33,11 +33,11 @@
 #define DATA_FORMAT DATADIR"%d"
 #define DATA_FORMAT_W DATADIR"%d-%d"
 
-#if RANK > 8
-#define BLIST_NAME DATADIR"blist32"
-#else
-#define BLIST_NAME DATADIR"blist"
-#endif
+//#if RANK > 8
+//#define BLIST_NAME DATADIR"blist32"
+//#else
+//#define BLIST_NAME DATADIR"blist"
+//#endif
 
 #define JOB_SIZE ((uint64_t)(cnk(32,RANK)/4))
 #define ARRAY_SIZE_S(rank) (((uint64_t)(cnk(32,rank))<<(2*(rank)))/4)

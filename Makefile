@@ -1,4 +1,4 @@
-VERSION:=0.7.0 # seven U&R
+VERSION:=0.8.0 # eight U&R
 NPROC ?= $(shell grep -ic Processor /proc/cpuinfo)
 MAKEFLAGS = -j $(NPROC)
 RANK ?= 8
@@ -11,7 +11,6 @@ export CC := gcc -Wall -DRANK=${RANK} $(if ${WRANK},-DWRANK=${WRANK}) $(if ${NOD
 CC += -Wno-multichar
 CC += -march=native -Ofast
 CC += -DDATADIR=\"${DATADIR}/\"
-CC += -DBLIST_NOFILE=1
 CC += -DNPROC=$(NPROC)
 
 -include cudablin/cuda_gpu.mk
@@ -45,9 +44,10 @@ WRANK_LIST:= ${WRANK}
 endif
 $(info WRANK_LIST=${WRANK_LIST})
 
-all: ${UTILS} klinies
+all: ${UTILS} wrankers
 KLINIES := $(addprefix bin/klini${RANK}-,${WRANK_LIST})
-klinies: ${KLINIES}
+STATS := $(addprefix bin/stat${RANK}-,${WRANK_LIST})
+wrankers: ${KLINIES} ${STATS}
 
 qa/% : qa/%.c
 	${MAKE} -C qa $*
@@ -67,6 +67,9 @@ ${UTILS} : bin/%${RANK} :  %.cu main_multithread.c Makefile ${INCS}
 ${KLINIES}: bin/klini${RANK}-% : klini.cu main_multithread.c Makefile ${INCS}
 	@mkdir -p bin
 	${CC} -DIN_klini -DWRANK=$* -include sha.h -include klini.cu main_multithread.c -lpthread -o$@
+${STATS}: bin/stat${RANK}-% : stat.cu main_multithread.c Makefile ${INCS}
+	@mkdir -p bin
+	${CC} -DIN_stat -DWRANK=$* -include sha.h -include stat.cu main_multithread.c -lpthread -o$@
 
 ${UTILS2} : % :  %.c Makefile ${INCS}
 	${CC} $< -lpthread  -o$@

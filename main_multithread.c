@@ -6,10 +6,6 @@
 #include "malloc_file.c"
 #include "percent.h"
 
-#if WRANK || IN_before || IN_klini
-#define NEED_BLIST 1
-#endif
-
 #define GINTERVAL 60
 
 static time_t started;
@@ -92,9 +88,9 @@ int main(int argc, char ** argv){
 	}
 #endif
 
-#if WRANK || IN_klini || IN_before
-	blist_init();
-#endif
+//#if WRANK || IN_klini || IN_before
+//	blist_init();
+//#endif
 
 #if   IN_mk_data
 #define FMODE FMODE_CR
