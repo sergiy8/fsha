@@ -36,17 +36,18 @@ static void * thread(void * arg){
 	return NULL;
 }
 
+#define GI (NPROC-1)
 static void glukalo(int s){
 	alarm(GINTERVAL);
-	if (i[0] >= (1<<RANK))
+	if (i[GI] >= (1<<RANK))
 		tprintf("100%%");
 	else
 #if WRANK
-	tprintf("%s %3X %3X",percent((blist_get(i[0])<<RANK) | j[0],cnk(RANK,WRANK)<<RANK),i[0],j[0]);
+	tprintf("%s %3X %3X",percent((blist_get(i[GI])<<RANK) | j[GI],cnk(RANK,WRANK)<<RANK),i[GI],j[GI]);
 #elif NODAMKA
-	tprintf("%s",percent(j[0],1<<RANK));
+	tprintf("%s",percent(j[GI],1<<RANK));
 #else
-	tprintf("%s %2X %2X",percent((i[0]<<RANK) | j[0],1<<(2*RANK)),i[0],j[0]);
+	tprintf("%s %2X %2X",percent((i[GI]<<RANK) | j[GI],1<<(2*RANK)),i[GI],j[GI]);
 #endif
 #ifndef IN_stat
 	uintmax_t total = 0;

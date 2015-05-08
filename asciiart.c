@@ -114,15 +114,8 @@ const char * summary(void){
 	switch(value) {
 		default: return "InternalError";
 		case 0:
-			if(arank==8) {
-				if(_popc(w) != 4)
-					return "8-NotInBase";
-				else
-					return "Draw?";
-			} else {
-				wattron(wask,COLOR_PAIR(COLOR_YELLOW));
-				return "Draw";
-			}
+			wattron(wask,COLOR_PAIR(COLOR_YELLOW));
+			return "Draw";
 		case 1:
 			wattron(wask,COLOR_PAIR(COLOR_SUCCESS));
 			return "WhiteWin";
@@ -231,6 +224,11 @@ new_screen:
 	mvwprintw(whelp,0,0,"TAB - rotate");
 	mvwprintw(whelp,1,0,"Shift/Arrows - shift position");
 	mvwprintw(whelp,2,0,"Shift/Digit - change pawn");
+#if MEGASK_REMOTE
+	mvwprintw(whelp,3,0,"DB=%s",REMOTE_HOST);
+#else
+	mvwprintw(whelp,3,0,"DB=%s",DATADIR);
+#endif
 	wrefresh(whelp);
 
 

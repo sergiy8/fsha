@@ -14,5 +14,10 @@ klini2:
 klini3 part (21M portion):
 8  31G 162G  88G 361G 	klini WRANK=6
 
-
-
+after klini8-4
+bin/stat8-4
+8  13G  38G 8.3G 116G   klini WRANK=4
+bin/stat8-3
+8  17G 6.1G  22G  95G   klini WRANK=4
+bin/stat8-5
+8  18G  54G 470M  67G   klini WRANK=4
