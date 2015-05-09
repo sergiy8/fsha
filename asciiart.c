@@ -25,6 +25,32 @@ static char * pens_prompt = "Pen:";
 static uint32_t b,w,d;
 static int rotate = 0;
 
+#define MAXHISTORY 100
+static int curhistory=0;
+static uint32_t b_h[MAXHISTORY],w_h[MAXHISTORY],d_h[MAXHISTORY],r_h[MAXHISTORY];
+static void push_h(void){
+	if(curhistory==MAXHISTORY){
+		putlog("History overflow, max %d",MAXHISTORY);
+		return;
+	}
+	b_h[curhistory]=b;
+	w_h[curhistory]=w;
+	d_h[curhistory]=d;
+	r_h[curhistory]=rotate;
+	curhistory++;
+}
+static void pop_h(void) {
+	if(curhistory==0) {
+		putlog("No previous position");
+		return;
+	}
+	curhistory--;
+	b = b_h[curhistory];
+	w = w_h[curhistory];
+	d = d_h[curhistory];
+	rotate = r_h[curhistory];
+}
+
 #define MAXFUTURE 40
 static int maxfuture = 0;
 static struct {
@@ -49,7 +75,7 @@ static struct {
 
 #define ASKY DOSKAY
 #define ASKX (DOSKAX + DOSKASX + 3)
-#define ASKSY 4
+#define ASKSY 5
 #define ASKSX 20
 
 #define HEXY (DOSKAY + DOSKASY - 1)
@@ -244,6 +270,9 @@ new_doska:
 	mvwprintw(wask, 1, 0, "Megask: %d", megask(b,w,d));
 	mvwprintw(wask, 2, 0, "Arank : %d-%d", _popc(b),_popc(w));
 	mvwprintw(wask, 3, 0, "%s",summary());
+	wclrtoeol(wask);
+	 wattrset(wask,0);
+	mvwprintw(wask, 4, 0, "%d",curhistory);
 	wclrtobot(wask);
 	wrefresh(wask);
 
@@ -273,6 +302,7 @@ new_doska:
 				  if(p!=NULL) {
 						int invert = p - klava;
 						if (invert < _popc(b)) {
+							push_h();
 							w ^= 1<<invert;
 							goto new_doska;
 						}
@@ -302,6 +332,7 @@ new_doska:
 						putlog("Syntax:%s",str);
 						continue;
 				  }
+				push_h();
 				  b = b2;
 				  w = w2;
 				  d = d2;
@@ -309,21 +340,26 @@ new_doska:
 				}
 			case KEY_SF: // shift - down
 				if (b&0xf) continue;
+				push_h();
 				b>>=4;
 				goto new_doska;
 			case KEY_SR: // shift-up
 				if (b&0xf0000000) continue;
+				push_h();
 				b<<=4;
 				goto new_doska;
 			case KEY_SRIGHT: //shift-right
 				if( b&0x88888888) continue;
+				push_h();
 				b<<=1;
 				goto new_doska;
 			case KEY_SLEFT: //shift-left
 				if(b&0x11111111) continue;
+				push_h();
 				b>>=1;
 				goto new_doska;
 			case 9:
+				push_h();
 				do_rotate:
 				{ uint32_t ub,uw,ud;
 				  Unpack(b,w,d,&uw,&ub,&ud);
@@ -345,6 +381,7 @@ new_doska:
 					switch(pens[new_pen]) {
 						default: break;
 						case 'C':
+							push_h();
 							b = w = d = 0;
 							rotate = 0;
 							goto new_doska;
@@ -357,6 +394,7 @@ new_doska:
 				{ int x;
 					for(x=0;x<maxfuture;x++)
 					if(wmouse_trafo(future[x].doska, &event.y, &event.x, FALSE)) {
+						push_h();
 						b = future[x].b;
 						w = future[x].w;
 						d = future[x].d;
@@ -372,17 +410,22 @@ new_doska:
 				{   int p = (7 - event.y) * 4 + event.x / 3;
 					int num = _popc(b & ALLONE(p));
 					if( (b & (1<<p)) == 0) { // New
+						push_h();
 						b |= 1<<p;
 						insert_bit(w,num,rotate ^ !!(pen==0 || pen==2));
 						insert_bit(d,num,pen>1);
 						goto new_doska;
 					}
 					// remove
+					push_h();
 					b ^= 1 << p;
 					remove_bit(w,num);
 					remove_bit(d,num);
 					goto new_doska;
 				}
+				goto new_doska;
+			case 0x107:
+				pop_h();
 				goto new_doska;
 			case KEY_RESIZE:
 				if(COLS <= FUTUREX || LINES <= LOGY )
