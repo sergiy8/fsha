@@ -21,30 +21,30 @@ static inline int TCreate(TPACK * cp, unsigned b, unsigned w, unsigned d) {
 
 extern int IsForced(TPACK cp);
 
-#define TFaceControl(cp) FaceControl((cp).b,(cp).w,(cp).d)
-static inline void TPack(TPACK * cp, uint32_t w, uint32_t b, uint32_t d) {
+static inline TPACK TPack(T12 p) {
 	uint32_t x,y,z;
-	Pack(&x,&y,&z,w,b,d);
-	cp->b = x;
-	cp->w = y;
-	cp->d = z;
+	Pack(&x,&y,&z,p.w,p.b,p.d);
+	return (TPACK){x,y,z};
 }
-#define TUnpack(cp,x,y,z) Unpack(cp.b, cp.w, cp.d, x, y, z)
+static inline T12 TUnpack(TPACK p) {
+	uint32_t x,y,z;
+	Unpack(p.b,p.w,p.d,&x,&y,&z);
+	return (T12){x,y,z};
+}
 
+#if 0
+static inline T12 rev_t12(T12 x ) {
+    return (T12){_brev(x.b),_brev(x.w),_brev(x.d)}; // Reverted!
+}
+
+#define TRotate(pos) TPack(rev_t12(TUnpack(pos)))
+#else
 static inline TPACK TRotate(TPACK cp) {
 	TPACK res;
-#if 0
-	uint32_t ub,uw,ud;
-	Unpack(cp.b,cp.w,cp.d,&uw,&ub,&ud);
-	uw = _brev(uw);
-	ub = _brev(ub);
-	ud = _brev(ud);
-	TPack(&res,ub,uw,ud);
-#else
 	int arank = _popc(cp.b);
 	res.b = _brev(cp.b);
 	res.w = (_brev(cp.w) >> (32-arank)) ^ ALLONE(arank);
 	res.d = _brev(cp.d) >> (32-arank);
-#endif
 	return res;
 }
+#endif

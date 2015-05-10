@@ -14,7 +14,7 @@ KERNEL
 	unsigned busy;
 	unsigned idx;
 	for(idx=0,busy=ALLONE(RANK);_popc(busy)==RANK;idx++,busy = _permut(busy)){
-		if(FaceControl(busy,i,j)) {
+		if(FaceControl((TPACK){busy,i,j})) {
 		   twobit_set(job,idx,3);
 		   atomicAdd(changed + ij%CACHESIZE,1);
 			continue;

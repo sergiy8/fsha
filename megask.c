@@ -1,11 +1,3 @@
-static inline int megask_bitcontrol(uint32_t b, uint32_t w, uint32_t d) {
-	int arank = _popc(b);
-	if(( 32 - _clz(w) > arank) || ( 32 - _clz(d) > arank) ){
-		putlog("megask_bitcontrol: %08X %X %X,clz(d)=%d",b,w,d,_clz(d));
-		return -1;
-	}
-	return 0;
-}
 #if MEGASK_REMOTE
 #include <unistd.h>
 #include <sys/socket.h>
@@ -22,12 +14,16 @@ struct sockaddr_in servaddr = {
 	if ( connect(sha_fd, (struct sockaddr*)&servaddr,sizeof(servaddr)))
 		error("Cannot connect %s:%d",REMOTE_HOST, REMOTE_PORT);
 }
-static int megask(uint32_t busy, uint32_t iwhite,uint32_t idamka) {
+static int megask(TPACK pos) {
+	if (pos.w==0)
+		return 2;
+	if (pos.w == ALLONE(_popc(pos.b)))
+		return 1;
 	struct sha_req req = {
 		.cmd = htole32(SHA_BXD),
-		.b = htole32(busy),
-		.w = htole32(iwhite),
-		.d = htole32(idamka),
+		.b = htole32(pos.b),
+		.w = htole32(pos.w),
+		.d = htole32(pos.d),
 	};
 	struct sha_resp resp;
 	if(write(sha_fd,&req,sizeof(req)) != sizeof(req))
@@ -62,20 +58,17 @@ static void megask_init(void) {
 	}
 }
 
-static int megask(uint32_t busy, uint32_t iwhite,uint32_t idamka) __attribute((const));
-static int megask(uint32_t busy, uint32_t iwhite,uint32_t idamka) {
-	int arank = __builtin_popcount(busy);
+static int megask(TPACK pos) {
+	int arank = __builtin_popcount(pos.b);
 	if(known[arank]==NULL)
 		return 4;
-	if (megask_bitcontrol(busy,iwhite,idamka))
-		return 6;
 	if (arank == 9 ) {
-		if(idamka)
+		if(pos.d)
 			return 4;
-    	uint32_t  idx  = blist_get(busy);
-    	return twobit_get(known[arank] + (uint64_t)iwhite * cnk(32,arank)/4, idx);
+    	uint32_t  idx  = blist_get(pos.b);
+    	return twobit_get(known[arank] + (uint64_t)pos.w * cnk(32,arank)/4, idx);
 	}
-    uint32_t  idx  = blist_get(busy);
-    return twobit_get(known[arank] + (uint64_t)((iwhite<<arank) | idamka) * cnk(32,arank)/4, idx);
+    uint32_t  idx  = blist_get(pos.b);
+    return twobit_get(known[arank] + (uint64_t)((pos.w<<arank) | pos.d) * cnk(32,arank)/4, idx);
 }
 #endif

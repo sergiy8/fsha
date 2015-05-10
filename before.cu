@@ -1,11 +1,17 @@
-#include "pack.h"
 #include "permut.h"
-#include "ask.c"
+#include "malloc_file.c"
+
+DATATYPE unsigned char * known[9];
+
+PROCTYPE int Ask(TPACK pos){
+    int arank = _popc(pos.b);
+//  if(arank==0 || arank>8) error("Error ask");
+    uint32_t  idx  = blist_get(pos.b);
+    return twobit_get(known[arank] + (uint64_t)((pos.w<<arank) | pos.d) * cnk(32,arank)/4, idx);
+}
 
 PROCTYPE int StaticWhite(uint32_t w, uint32_t b, uint32_t d){
-        uint32_t busy,iwhite,idamka;
-        Pack(&busy,&iwhite,&idamka,w,b,d);
-        switch(Ask(busy,iwhite,idamka)) {  // RANK of ask is always less the our
+        switch(Ask(TPack((T12){w,b,d}))) {  // RANK of ask is always less the our
 		case 3:
         case 0 : return 0;
         case 1 : return 5;
@@ -14,8 +20,8 @@ PROCTYPE int StaticWhite(uint32_t w, uint32_t b, uint32_t d){
 			return 0;
         }
 }
-PROCTYPE inline int MoveBlack(uint32_t w, uint32_t b, uint32_t d){
-        return StaticWhite(_brev(w),_brev(b),_brev(d));
+PROCTYPE inline int MoveBlack(T12 pos){
+        return StaticWhite(_brev(pos.w),_brev(pos.b),_brev(pos.d));
 }
 
 #include "move4.c"
@@ -36,10 +42,8 @@ KERNEL
     unsigned idx;
     for(idx=0,busy=ALLONE(RANK);_popc(busy)==RANK;idx++,busy = _permut(busy))
 	if(twobit_get(job,idx)==0) {
-	        uint32_t w,b,d;
    			int r;
-        	Unpack(busy,i,j,&w,&b,&d);
-       		r = MoveWhite(w,b,d);
+			r = MoveWhite(TUnpack((TPACK){busy,i,j}));
         	if(r==R_NOMOVE) continue;  // rmain unknown
         	if(r<0) r=2;
         	else if(r>0) r=1;

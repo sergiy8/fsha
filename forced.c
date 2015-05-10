@@ -1,12 +1,22 @@
 #include "sha.h"
-PROCTYPE inline int MoveBlack(uint32_t w, uint32_t b, uint32_t d){
-	return 0;
+PROCTYPE inline int MoveBlack(T12 pos){
+	return -1; // Negative - stop futher search
 }
 #define IN_before 1
+#define MoveWhite MoveWhiteTake
 #include "move4.c"
+
+#undef IN_before
+#undef MoveWhite
+#define IN_klini 1
+#define MoveWhite MoveWhiteRaw
+#include "move4.c"
+
 int IsForced(TPACK cp){
-	uint32_t x,y,z;
-	TUnpack(cp,&x,&y,&z);
-	return MoveWhite(x,y,z) != R_NOMOVE;
-	return -1; // Negative - stop futher search
+	T12 pos = TUnpack(cp);
+	if (MoveWhiteTake(pos) != R_NOMOVE )
+			return -1;
+	if (MoveWhiteRaw(pos) != R_NOMOVE )
+			return 0;
+	return -2;
 }

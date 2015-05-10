@@ -1,6 +1,5 @@
 
 #include "sha.h"
-#include "pack.h"
 #include "getarg.h"
 
 static uint32_t busy,iwhite,idamka,w,b,d;

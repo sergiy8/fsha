@@ -7,7 +7,6 @@
 #undef RANK
 #define RANK 24
 #include "sha.h"
-#include "blist.h"
 
 #undef MEGASK_REMOTE
 #include "megask.c"

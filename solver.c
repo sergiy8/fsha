@@ -4,7 +4,6 @@
 #include <pthread.h>
 #include "sha.h"
 #include "getarg.h"
-#include "pack.h"
 static time_t started;
 
 typedef uint32_t db_t;

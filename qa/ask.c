@@ -14,7 +14,6 @@ int main(int argc, char ** argv){
 	d = getarg(3);
 	rank = _popc(b);
         array = malloc_file(ARRAY_SIZE_S(rank),FMODE_RO,DATA_FORMAT,rank);
-	blist = malloc_file(BLIST_SIZE,FMODE_RO,BLIST_NAME);
 // search index
 	for(x=ALLONE(rank);x!=b;x=_permut(x))
 		idx++;

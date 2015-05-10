@@ -1,7 +1,7 @@
-CC += -I.. -DDATADIR=\"$(realpath ../../data)/\"
+CC += -I.. -DDATADIR=\"$(realpath ../../data)/\" -Wno-multichar
 
 INCS := ../sha.h ../twobit.h ../pack.h ../cnk.inc
-UTILS := pack cnk facecontrol ask itoa permut
+UTILS := pack facecontrol ask itoa permut
 UTILS += move
 UTILS += show
 UTILS += haszero
@@ -15,5 +15,5 @@ ${UTILS}: % :  %.c ${INCS} Makefile
 
 clean:
 	rm -rf ${UTILS}
-.gitignore:
-	echo ${UTILS} | sed ss\ s\\nsg >> ../$@
+.gitignore: Makefile
+	echo ${UTILS} | sed ss\ s\\nsg > $@

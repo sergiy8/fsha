@@ -87,8 +87,9 @@ static struct {
 #define FUTUREY 0
 #define FUTUREX (HEXX + HEXSX + 1)
 #define FUTURESY (DOSKASY+2)
-#define FUTURESX (DOSKASX+4)
+#define FUTURESX (DOSKASX+5)
 
+static const char rank_name[32] = "0123456789ABCDEFGHIJKLMNOPQRST";
 
 static void draw_pen(void){
 	int i;
@@ -123,7 +124,6 @@ static void doska(WINDOW * wdoska, TPACK cp){
 }
 
 const char * summary(void){
-	int value = megask(cp.b,cp.w,cp.d);
 	int arank = _popc(cp.b);
 	if (_popc(cp.b) ==0 ||
 		_popc(cp.b) > 24 ||
@@ -131,10 +131,11 @@ const char * summary(void){
 		_popc(cp.w^ALLONE(arank)) > 12
 	)
 		return "IllegalCount";
-	if (TFaceControl(cp))
+	if (FaceControl(cp))
 		return "IllegalDamka";
 	if ( IsForced(cp))
-		wattron(wask,A_STANDOUT);
+		wattron(wask,A_REVERSE);
+	int value = megask(cp);
 	switch(value) {
 		default: return "InternalError";
 		case 0:
@@ -153,8 +154,6 @@ const char * summary(void){
 			return "NotInBase";
 		case 5:
 			return "CommunicationError";
-		case 6:
-			return "MegaskBitcontrol";
 	}
 }
 
@@ -166,29 +165,39 @@ static int revert_ask(int x) {
 	return x;
 }
 
+static inline T12 swap_t12(T12 x) {
+	return (T12){x.b,x.w,x.d};
+}
+
 #define MOVE_FIND_ALL 1
-int MoveBlack(uint32_t b, uint32_t w, uint32_t d){
+int MoveBlack(T12 pos){
 	if (maxfuture >= MAXFUTURE ) {
-		putlog("Max=%d, Ign wbd=%08X %08X %08X",MAXFUTURE, w, b, d);
+		putlog("Max=%d, Ign wbd=%08X %08X %08X",MAXFUTURE, pos.w, pos.b, pos.d);
 		return 0;
 	}
 	const int perline = (COLS - FUTUREX ) / FUTURESX;
-	TPack( &future[maxfuture].cp, w, b, d); // ?? Do we need revert damkas?
+	future[maxfuture].cp = TPack(swap_t12(pos));
 	if (perline) {
 		if(future[maxfuture].doska == NULL )
 			future[maxfuture].doska = newwin(FUTURESY,FUTURESX,
 				FUTUREY + (maxfuture / perline )*FUTURESY,
 				FUTUREX + (maxfuture % perline)*FUTURESX);
 		WINDOW * this = future[maxfuture].doska;
-		uint32_t x,y,z;
-		Pack(&x,&y,&z,_brev(b),_brev(w),_brev(d));
-		int value = revert_ask(megask(x,y,z));
+		int value = revert_ask(megask(TPack((T12){_brev(pos.w),_brev(pos.b),_brev(pos.d)})));
 		if(value == 1)
 			wattron(this,COLOR_PAIR(COLOR_SUCCESS));
 		else if (value == 2)
 			wattron(this,COLOR_PAIR(COLOR_FAIL));
-		if (IsForced(TRotate(future[maxfuture].cp)))
-			wattron(this,A_STANDOUT);
+		switch (IsForced(TRotate(future[maxfuture].cp))){
+		case -2:
+			wattron(this,A_BOLD);
+			wattron(this,A_REVERSE);
+			break;
+		case -1:
+			wattron(this,A_REVERSE);
+			break;
+		default:;
+		}
 		mvwprintw(this,DOSKASY,0,"%X %X %X=%d", future[maxfuture].cp.b, future[maxfuture].cp.w, future[maxfuture].cp.d, value);
 		wattrset(this,0);
 		doska(this, future[maxfuture].cp);
@@ -199,6 +208,11 @@ int MoveBlack(uint32_t b, uint32_t w, uint32_t d){
 #include "move4.c"
 
 int main(int argc, char ** argv){
+	if (argc == 5 ) { // Extra value from klini log
+		int x = getarg(4);
+		if ( x == 1 || x == 2 )
+			argc=4;
+	}
 	if (argc == 4 ) {
 		if( TCreate(&cp,getarg(1),getarg(2),getarg(3)))
 			error("Tcreate");
@@ -268,8 +282,8 @@ new_doska:
 
 	wattrset(wask,0);
 	mvwprintw(wask, 0, 0, "Move: %c", rotate?'Y':'X');
-	mvwprintw(wask, 1, 0, "Megask: %d", megask(cp.b,cp.w,cp.d));
-	mvwprintw(wask, 2, 0, "Arank : %d-%d", _popc(cp.b),_popc(cp.w));
+	mvwprintw(wask, 1, 0, "Megask: %d", megask(cp));
+	mvwprintw(wask, 2, 0, "Arank : %c-%c", rank_name[_popc(cp.b)],rank_name[_popc(cp.w)]);
 	mvwprintw(wask, 3, 0, "%s",summary());
 	wclrtoeol(wask);
 	 wattrset(wask,0);
@@ -278,16 +292,13 @@ new_doska:
 	wclrtobot(wask);
 	wrefresh(wask);
 
-	{ uint32_t x,y,z;
-	  for(x=0;x<maxfuture;x++){
+	for(int x=0;x<maxfuture;x++){
 		werase(future[x].doska);
-	    wrefresh(future[x].doska);
-	  }
-	  maxfuture=0;
-	  Unpack(cp.b,cp.w,cp.d,&x,&y,&z);
-	  //putlog("%08X %X %X unpacked =  %08X %08X %08X",b,w,d,x,y,z);
-	  MoveWhite(x,y,z);
+		wrefresh(future[x].doska);
 	}
+
+	maxfuture=0;
+	MoveWhite(TUnpack(cp));
 
 	char str[HEXSX];
 	int pos=0;
