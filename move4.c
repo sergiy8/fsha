@@ -16,10 +16,6 @@ static inline int NEX(const int * tab, int *  x){
 
 #define promotion 0xf0000000
 
-#ifndef mprintf
-#define mprintf(args...)
-#endif
-
 #ifndef IN_klini
 // if we can take - do it, otherwise return R_NOMOVE
 PROCTYPE int Chain(int i, int dflag, uint32_t mine, uint32_t his, uint32_t d , uint32_t nepusto){

@@ -2,3 +2,4 @@ bin
 select
 shader
 asciiart
+*.o

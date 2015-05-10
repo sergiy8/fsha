@@ -5,7 +5,6 @@
 
 #include "sha.h"
 #include "facecontrol.h"
-#include "pack.h"
 #include "getarg.h"
 
 static WINDOW * wdoska, *whex, *wlog, *wask, *whelp, *wpen;
@@ -22,20 +21,19 @@ static int pen = 0;
 static char * pens_prompt = "Pen:";
 
 
-static uint32_t b,w,d;
+static TPACK cp; // Current position
 static int rotate = 0;
 
 #define MAXHISTORY 100
 static int curhistory=0;
-static uint32_t b_h[MAXHISTORY],w_h[MAXHISTORY],d_h[MAXHISTORY],r_h[MAXHISTORY];
+static TPACK t_h[MAXHISTORY];
+static int r_h[MAXHISTORY];
 static void push_h(void){
 	if(curhistory==MAXHISTORY){
 		putlog("History overflow, max %d",MAXHISTORY);
 		return;
 	}
-	b_h[curhistory]=b;
-	w_h[curhistory]=w;
-	d_h[curhistory]=d;
+	t_h[curhistory] = cp;
 	r_h[curhistory]=rotate;
 	curhistory++;
 }
@@ -45,16 +43,14 @@ static void pop_h(void) {
 		return;
 	}
 	curhistory--;
-	b = b_h[curhistory];
-	w = w_h[curhistory];
-	d = d_h[curhistory];
+	cp = t_h[curhistory];
 	rotate = r_h[curhistory];
 }
 
 #define MAXFUTURE 40
 static int maxfuture = 0;
 static struct {
-	uint32_t b,w,d;
+	TPACK cp;
 	WINDOW * doska;
 } future[MAXFUTURE];
 
@@ -75,7 +71,7 @@ static struct {
 
 #define ASKY DOSKAY
 #define ASKX (DOSKAX + DOSKASX + 3)
-#define ASKSY 5
+#define ASKSY 6
 #define ASKSX 20
 
 #define HEXY (DOSKAY + DOSKASY - 1)
@@ -107,16 +103,16 @@ static void draw_pen(void){
 	wrefresh(wpen);
 }
 
-static void doska(WINDOW * wdoska, uint32_t b, uint32_t w, uint32_t d){
+static void doska(WINDOW * wdoska, TPACK cp){
 	int i,j;
 	char pole[32]={};
-	while(b) {
-		int i = __builtin_ffs(b) - 1;
-        pole[i] = (w&1)^rotate? 'x' : 'y';
-        if(d&1) pole[i] ^= 0x20;
-		w/=2;
-		d/=2;
-		b&=b-1;
+	while(cp.b) {
+		int i = __builtin_ffs(cp.b) - 1;
+        pole[i] = (cp.w&1)^rotate? 'x' : 'y';
+        if(cp.d&1) pole[i] ^= 0x20;
+		cp.w/=2;
+		cp.d/=2;
+		cp.b&=cp.b-1;
     }
 	for(i=0;i<8;i++)
 	for(j=0;j<4;j++) {
@@ -127,16 +123,18 @@ static void doska(WINDOW * wdoska, uint32_t b, uint32_t w, uint32_t d){
 }
 
 const char * summary(void){
-	int value = megask(b,w,d);
-	int arank = _popc(b);
-	if (_popc(b) ==0 ||
-		_popc(b) > 24 ||
-		_popc(w) > 12 ||
-		_popc(w^ALLONE(arank)) > 12
+	int value = megask(cp.b,cp.w,cp.d);
+	int arank = _popc(cp.b);
+	if (_popc(cp.b) ==0 ||
+		_popc(cp.b) > 24 ||
+		_popc(cp.w) > 12 ||
+		_popc(cp.w^ALLONE(arank)) > 12
 	)
 		return "IllegalCount";
-	if (FaceControl(b,w,d))
+	if (TFaceControl(cp))
 		return "IllegalDamka";
+	if ( IsForced(cp))
+		wattron(wask,A_STANDOUT);
 	switch(value) {
 		default: return "InternalError";
 		case 0:
@@ -175,7 +173,7 @@ int MoveBlack(uint32_t b, uint32_t w, uint32_t d){
 		return 0;
 	}
 	const int perline = (COLS - FUTUREX ) / FUTURESX;
-	Pack( &future[maxfuture].b, &future[maxfuture].w, &future[maxfuture].d, (w), (b), (d));
+	TPack( &future[maxfuture].cp, w, b, d); // ?? Do we need revert damkas?
 	if (perline) {
 		if(future[maxfuture].doska == NULL )
 			future[maxfuture].doska = newwin(FUTURESY,FUTURESX,
@@ -189,9 +187,11 @@ int MoveBlack(uint32_t b, uint32_t w, uint32_t d){
 			wattron(this,COLOR_PAIR(COLOR_SUCCESS));
 		else if (value == 2)
 			wattron(this,COLOR_PAIR(COLOR_FAIL));
-		mvwprintw(this,DOSKASY,0,"%X %X %X=%d", future[maxfuture].b, future[maxfuture].w, future[maxfuture].d, value);
+		if (IsForced(TRotate(future[maxfuture].cp)))
+			wattron(this,A_STANDOUT);
+		mvwprintw(this,DOSKASY,0,"%X %X %X=%d", future[maxfuture].cp.b, future[maxfuture].cp.w, future[maxfuture].cp.d, value);
 		wattrset(this,0);
-		doska(this, future[maxfuture].b, future[maxfuture].w, future[maxfuture].d);
+		doska(this, future[maxfuture].cp);
 	}
 	maxfuture++;
 	return 0;
@@ -200,20 +200,21 @@ int MoveBlack(uint32_t b, uint32_t w, uint32_t d){
 
 int main(int argc, char ** argv){
 	if (argc == 4 ) {
-		b = getarg(1);
-		w = getarg(2);
-		d = getarg(3);
+		if( TCreate(&cp,getarg(1),getarg(2),getarg(3)))
+			error("Tcreate");
 	} else if (argc==2) {
+		unsigned x,y,z;
 		FILE * f = fopen(argv[1],"r");
 		if(f==NULL)
 			error("Is it file:%s",argv[1]);
-		if(fscanf(f,"%x%x%x",&b,&w,&d)!=3)
+		if(fscanf(f,"%x%x%x",&x,&y,&z)!=3)
 			error("%s format error",argv[1]);
 		fclose(f);
+		if( TCreate(&cp,x,y,z))
+			error("Tcreate");
 	} else if (argc==1) {
-		b = 0x00f00f00;
-		w = 0xf;
-		d = 0;
+		if( TCreate(&cp,0x00f00f00,0xf,0))
+			error("Tcreate");
 	} else {
 		error("File name - or Three args!");
 	}
@@ -263,16 +264,17 @@ new_screen:
 
 
 new_doska:
-	doska(wdoska, b,w,d);
+	doska(wdoska, cp);
 
 	wattrset(wask,0);
 	mvwprintw(wask, 0, 0, "Move: %c", rotate?'Y':'X');
-	mvwprintw(wask, 1, 0, "Megask: %d", megask(b,w,d));
-	mvwprintw(wask, 2, 0, "Arank : %d-%d", _popc(b),_popc(w));
+	mvwprintw(wask, 1, 0, "Megask: %d", megask(cp.b,cp.w,cp.d));
+	mvwprintw(wask, 2, 0, "Arank : %d-%d", _popc(cp.b),_popc(cp.w));
 	mvwprintw(wask, 3, 0, "%s",summary());
 	wclrtoeol(wask);
 	 wattrset(wask,0);
 	mvwprintw(wask, 4, 0, "%d",curhistory);
+//	mvwprintw(wask, 5, 0, "%s",IsForced(cp)?"Forced":"");
 	wclrtobot(wask);
 	wrefresh(wask);
 
@@ -282,14 +284,14 @@ new_doska:
 	    wrefresh(future[x].doska);
 	  }
 	  maxfuture=0;
-	  Unpack(b,w,d,&x,&y,&z);
+	  Unpack(cp.b,cp.w,cp.d,&x,&y,&z);
 	  //putlog("%08X %X %X unpacked =  %08X %08X %08X",b,w,d,x,y,z);
 	  MoveWhite(x,y,z);
 	}
 
 	char str[HEXSX];
 	int pos=0;
-	snprintf(str,sizeof(str),"%08X %X %X          ",b,w,d);
+	snprintf(str,sizeof(str),"%08X %X %X          ",cp.b,cp.w,cp.d);
 	for(;;) {
 		MEVENT event;
 		mvwprintw(whex,0,0,"%s",str);
@@ -301,9 +303,9 @@ new_doska:
 				  char * p = strchr(klava,c);
 				  if(p!=NULL) {
 						int invert = p - klava;
-						if (invert < _popc(b)) {
+						if (invert < _popc(cp.b)) {
 							push_h();
-							w ^= 1<<invert;
+							cp.w ^= 1<<invert;
 							goto new_doska;
 						}
 				  }
@@ -333,41 +335,37 @@ new_doska:
 						continue;
 				  }
 				push_h();
-				  b = b2;
-				  w = w2;
-				  d = d2;
+				if (TCreate(&cp,b2,w2,d2)) {
+					pop_h();
+					putlog("Tcreate error");
+					continue;
+				}
 				  goto new_doska;
 				}
 			case KEY_SF: // shift - down
-				if (b&0xf) continue;
+				if (cp.b&0xf) continue;
 				push_h();
-				b>>=4;
+				cp.b>>=4;
 				goto new_doska;
 			case KEY_SR: // shift-up
-				if (b&0xf0000000) continue;
+				if (cp.b&0xf0000000) continue;
 				push_h();
-				b<<=4;
+				cp.b<<=4;
 				goto new_doska;
 			case KEY_SRIGHT: //shift-right
-				if( b&0x88888888) continue;
+				if( cp.b&0x88888888) continue;
 				push_h();
-				b<<=1;
+				cp.b<<=1;
 				goto new_doska;
 			case KEY_SLEFT: //shift-left
-				if(b&0x11111111) continue;
+				if(cp.b&0x11111111) continue;
 				push_h();
-				b>>=1;
+				cp.b>>=1;
 				goto new_doska;
 			case 9:
 				push_h();
 				do_rotate:
-				{ uint32_t ub,uw,ud;
-				  Unpack(b,w,d,&uw,&ub,&ud);
-				  uw = _brev(uw);
-				  ub = _brev(ub);
-				  ud = _brev(ud);
-				  Pack(&b,&w,&d,ub,uw,ud);
-				}
+				cp = TRotate(cp);
 				rotate^=1;
 				goto new_doska;
 			case KEY_MOUSE:
@@ -382,7 +380,7 @@ new_doska:
 						default: break;
 						case 'C':
 							push_h();
-							b = w = d = 0;
+							cp.b = cp.w = cp.d = 0;
 							rotate = 0;
 							goto new_doska;
 					}
@@ -395,9 +393,7 @@ new_doska:
 					for(x=0;x<maxfuture;x++)
 					if(wmouse_trafo(future[x].doska, &event.y, &event.x, FALSE)) {
 						push_h();
-						b = future[x].b;
-						w = future[x].w;
-						d = future[x].d;
+						cp = future[x].cp;
 						goto do_rotate;
 					}
 				}
@@ -408,19 +404,19 @@ new_doska:
 				if(event.x % 3 != 2)
 					continue;
 				{   int p = (7 - event.y) * 4 + event.x / 3;
-					int num = _popc(b & ALLONE(p));
-					if( (b & (1<<p)) == 0) { // New
+					int num = _popc(cp.b & ALLONE(p));
+					if( (cp.b & (1<<p)) == 0) { // New
 						push_h();
-						b |= 1<<p;
-						insert_bit(w,num,rotate ^ !!(pen==0 || pen==2));
-						insert_bit(d,num,pen>1);
+						cp.b |= 1<<p;
+						insert_bit(cp.w,num,rotate ^ !!(pen==0 || pen==2));
+						insert_bit(cp.d,num,pen>1);
 						goto new_doska;
 					}
 					// remove
 					push_h();
-					b ^= 1 << p;
-					remove_bit(w,num);
-					remove_bit(d,num);
+					cp.b ^= 1 << p;
+					remove_bit(cp.w,num);
+					remove_bit(cp.d,num);
 					goto new_doska;
 				}
 				goto new_doska;

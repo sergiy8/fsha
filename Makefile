@@ -17,7 +17,7 @@ CC += -DNPROC=$(NPROC)
 NVCC:= nvcc -Xptxas -v ${CUDA_GPU} -DRANK=${RANK}
 CUDALIBS:= -L/usr/local/cuda/lib64 -L/usr/local/cuda/lib -lcuda -lcudart
 
-INCS := sha.h arch.h twobit.h pack.h blist.h neighbor.h tprintf.h percent.h
+INCS := sha.h arch.h twobit.h pack.h blist.h neighbor.h tprintf.h percent.h tpack.h
 INCS += cnk.inc neighbor.inc megask.c move4.c ask.c malloc_file.c
 
 # DB processors
@@ -80,8 +80,10 @@ select.inc: plugin_select Makefile
 	ls $</*.c | awk '{print "#include","<"$$1">";}' > $@
 
 NCURSES_LIBS := $(shell ncurses5-config --libs)
-asciiart: asciiart.c Makefile ${INCS}
-	${CC} $< -DMEGASK_REMOTE=1 ${NCURSES_LIBS} -o$@
+asciiart: asciiart.c forced.o Makefile ${INCS}
+	${CC} -DMEGASK_REMOTE=1 $< forced.o ${NCURSES_LIBS} -o$@
+forced.o : forced.c Makefile ${INCS}
+	${CC} -c $< -o$@
 
 $(addprefix c,${CUTILS}) : c% : %.kernel cudamain.cpp cudablin/cudablin.h ${INCS}
 	${NVCC} -DIN_$* -o $@ -include sha.h -include $*.kernel cudamain.cpp  ${CUDALIBS}
@@ -92,6 +94,7 @@ $(addprefix c,${CUTILS}) : c% : %.kernel cudamain.cpp cudablin/cudablin.h ${INCS
 	${NVCC} -DIN_$* --cubin -o $@ -include sha.h $<
 
 CLEANLIST := ${UTILS2} ${UTILS3} $(addprefix c,${CUTILS}) *.cubin *.kernel
+CLEANLIST += forced.o
 clean:
 	${MAKE} -C dbutil clean
 	${MAKE} -C qa clean
