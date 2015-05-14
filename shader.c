@@ -23,7 +23,7 @@ static void * dialogue(void * arg) {
 			resp.value = -1;
 			break;
 		case SHA_BXD:
-			resp.value = megask(le32toh(req.b), le32toh(req.w), le32toh(req.d));
+			resp.value = megask((TPACK){le32toh(req.b), le32toh(req.w), le32toh(req.d)});
 			break;
 		case SHA_BLIST:
 			resp.value = blist_get(le32toh(req.b));

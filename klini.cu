@@ -4,20 +4,19 @@ DATATYPE unsigned long long  changed[CACHESIZE];
 
 
 PROCTYPE int StaticWhite(uint32_t w, uint32_t b, uint32_t d){
-        uint32_t busy,iwhite,idamka;
+		TPACK x = TPack((T12){w,b,d});
 	uint32_t idx;
-        Pack(&busy,&iwhite,&idamka,w,b,d);
 #if NODAMKA
 	if(idamka){
-		printf("%08X %X %X\n",busy,iwhite,idamka);
+		printf("%08X %X %X\n",x.b,x.w,x.d);
 		return 0;
 	}
 #endif
-		idx = blist_get(busy);
+		idx = blist_get(x.b);
 #if NODAMKA
         switch(twobit_get(array + (uint64_t)iwhite * JOB_SIZE, idx)){
 #else
-        switch(twobit_get(array + (uint64_t)((iwhite<<RANK)|idamka) * JOB_SIZE, idx)){
+        switch(twobit_get(array + (uint64_t)((x.w<<RANK)|x.d) * JOB_SIZE, idx)){
 #endif
         case 3 : // Cimus ZZ
 		return 0;
@@ -36,7 +35,7 @@ PROCTYPE inline int MoveBlack(T12 pos){
 }
 
 static unsigned spewcount[CACHESIZE];
-#define SPEW_LEVEL 32
+#define SPEW_LEVEL 16
 
 #include "move4.c"
 KERNEL

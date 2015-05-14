@@ -2,21 +2,18 @@
 #include "sha.h"
 #include "getarg.h"
 
-static uint32_t busy,iwhite,idamka,w,b,d;
-
-static void p(const char * s){
-	printf("busy=%08X iwhite=%X idamka=%X w=%08X b=%08X d=%08X %s\n",busy,iwhite,idamka,w,b,d,s);
-}
-
 int main(int argc, char ** argv){
-	w = getarg(1);
-	b = getarg(2);
-	d = getarg(3);
-	p("inited");
-	Pack(&busy,&iwhite,&idamka,w,b,d);
-	p("pucked");
-	w=0, b=0, d=0;
-	Unpack(busy,iwhite,idamka,&w,&b,&d);
-	p("Unpucked");
+	TPACK x;
+	T12 y;
+	if (TCreate(&x, getarg(1),getarg(2),getarg(3)))
+		error("Tcreate");
+
+	y = TUnpack(x);
+
+	printf("%08X %X %X -> %08X %08X %08X\n", x.b, x.w, x.d, y.w, y.b, y.d);
+
+	x = TPack(y);
+
+	printf("%08X %X %X\n", x.b, x.w, x.d);
 	return 0;
 }

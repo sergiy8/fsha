@@ -22,14 +22,38 @@ static inline int TCreate(TPACK * cp, unsigned b, unsigned w, unsigned d) {
 extern int IsForced(TPACK cp);
 
 static inline TPACK TPack(T12 p) {
-	uint32_t x,y,z;
-	Pack(&x,&y,&z,p.w,p.b,p.d);
-	return (TPACK){x,y,z};
+	uint32_t b2 = p.w | p.b;
+	TPACK res = {b2,0,0};
+	unsigned i = 1;
+	while(b2) {
+		int bit = 1<<(_ffs(b2)-1);
+		if (p.w&bit)
+			res.w |= i;
+		if (p.d&bit)
+			res.d |= i;
+		b2 ^= bit;
+		i<<=1;
+	}
+	return res;
+
 }
 static inline T12 TUnpack(TPACK p) {
-	uint32_t x,y,z;
-	Unpack(p.b,p.w,p.d,&x,&y,&z);
-	return (T12){x,y,z};
+	T12 res = {0,0,0};
+	unsigned i = 1;
+	while(p.b) {
+		int bit = 1<<(_ffs(p.b)-1);
+		if (p.w & i )
+			res.w |= bit;
+		else
+			res.b |= bit;
+
+		if(p.d&i)
+			res.d |= bit;
+
+		p.b ^= bit;
+		i<<=1;
+	}
+	return res;
 }
 
 #if 0

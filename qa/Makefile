@@ -1,6 +1,6 @@
 CC += -I.. -DDATADIR=\"$(realpath ../../data)/\" -Wno-multichar
 
-INCS := ../sha.h ../twobit.h ../pack.h ../cnk.inc
+INCS := ../sha.h ../twobit.h ../tpack.h ../cnk.inc
 UTILS := pack facecontrol ask itoa permut
 UTILS += move
 UTILS += show

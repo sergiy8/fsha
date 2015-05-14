@@ -27,7 +27,6 @@ typedef struct {
 #include "tprintf.h"
 #include "blist.h"
 #include "remote.h"
-#include "pack.h"
 #include "tpack.h"
 
 #ifndef DATADIR
