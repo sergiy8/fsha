@@ -33,6 +33,7 @@ static void * thread(void * arg){
 		}
 		job += JOB_SIZE << RANK;
 	}
+	tprintf("thread %u closed\n",n);
 	return NULL;
 }
 
@@ -117,11 +118,11 @@ for(;;) {
 	}
 	for(i=0;i<NPROC;i++){
 			pthread_join(pid[i], NULL);
-	alarm(0);
 #ifndef IN_stat
 			total+=changed[i];
 #endif
 	}
+	alarm(0);
 #ifdef IN_klini
 	if(total==0) break;
 	tprintf("changed=%ju %s\n",total,itoa(total));
