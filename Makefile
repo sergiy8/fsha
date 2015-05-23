@@ -22,7 +22,7 @@ INCS := sha.h arch.h twobit.h blist.h neighbor.h tprintf.h percent.h tpack.h
 INCS += cnk.inc neighbor.inc megask.c move4.c malloc_file.c
 
 # DB processors
-UTILS := stat mk_data before after
+UTILS := stat mk_data before klini after
 UTILS := $(addsuffix ${RANK},${UTILS})
 UTILS := $(addprefix bin/,${UTILS})
 
@@ -68,6 +68,7 @@ ${UTILS} : bin/%${RANK} :  %.cu main_multithread.c Makefile ${INCS}
 ${KLINIES}: bin/klini${RANK}-% : klini.cu main_multithread.c Makefile ${INCS}
 	@mkdir -p bin
 	${CC} -DIN_klini -DWRANK=$* -include sha.h -include klini.cu main_multithread.c -lpthread -o$@
+
 ${STATS}: bin/stat${RANK}-% : stat.cu main_multithread.c Makefile ${INCS}
 	@mkdir -p bin
 	${CC} -DIN_stat -DWRANK=$* -include sha.h -include stat.cu main_multithread.c -lpthread -o$@

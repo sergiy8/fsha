@@ -83,6 +83,9 @@ int main(int argc, char ** argv){
 #if defined(WRANK) && defined(IN_klini)
 	printf("WRANK=%d\n",WRANK);
 #endif
+#if defined SPEW_LEVEL
+	printf("SPEW_LEVEL=%X(%d)\n", SPEW_LEVEL, SPEW_LEVEL);
+#endif
 
 #if IN_before
         for(i=1;i<RANK;i++){

@@ -27,3 +27,6 @@ bin/stat8-3
 8 5.0G 6.4G  34G  95G   klini WRANK=4
 bin/stat8-5
 8 5.7G  67G 599M  67G   klini WRANK=4
+
+bin/stat8:
+8 122G 165G  91G 264G

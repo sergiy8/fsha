@@ -35,7 +35,7 @@ PROCTYPE inline int MoveBlack(T12 pos){
 }
 
 static unsigned spewcount[CACHESIZE];
-#define SPEW_LEVEL (1<<10)
+#define SPEW_LEVEL (1<<0)
 
 #include "move4.c"
 KERNEL
