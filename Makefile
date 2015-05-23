@@ -8,8 +8,8 @@ endif
 export DATADIR := $(realpath ../data/)
 
 export CC := gcc -Wall -DRANK=${RANK} $(if ${WRANK},-DWRANK=${WRANK}) $(if ${NODAMKA},-DNODAMKA=${NODAMKA})
-CC += -Wno-multichar
-CC += -march=native -Ofast
+CC += -Wno-multichar -O3
+CC += -march=native
 CC += -DDATADIR=\"${DATADIR}/\"
 CC += -DNPROC=$(NPROC)
 CC += -std=gnu99

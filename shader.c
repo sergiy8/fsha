@@ -18,18 +18,15 @@ static void * dialogue(void * arg) {
 	for(;;) {
 		if(read(fd,&req,sizeof(req)) != sizeof(req))
 			break;
-		switch(le32toh(req.cmd)) {
+		switch(ntohl(req.cmd)) {
 		default:
 			resp.value = -1;
 			break;
 		case SHA_BXD:
-			resp.value = megask((TPACK){le32toh(req.b), le32toh(req.w), le32toh(req.d)});
-			break;
-		case SHA_BLIST:
-			resp.value = blist_get(le32toh(req.b));
+			resp.value = megask((TPACK){ntohl(req.b), ntohl(req.w), ntohl(req.d)});
 			break;
 		}
-		resp.value = htole32(resp.value);
+		resp.value = htonl(resp.value);
 		if (write(fd,&resp,sizeof(resp)) != sizeof(resp))
 			break;
 	}

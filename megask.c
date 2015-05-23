@@ -20,19 +20,20 @@ static int megask(TPACK pos) {
 	if (pos.w == ALLONE(_popc(pos.b)))
 		return 1;
 	struct sha_req req = {
-		.cmd = htole32(SHA_BXD),
-		.b = htole32(pos.b),
-		.w = htole32(pos.w),
-		.d = htole32(pos.d),
+		.cmd = htonl(SHA_BXD),
+		.b = htonl(pos.b),
+		.w = htonl(pos.w),
+		.d = htonl(pos.d),
 	};
 	struct sha_resp resp;
 	if(write(sha_fd,&req,sizeof(req)) != sizeof(req))
 		return 5;
 	if(read(sha_fd, &resp, sizeof(resp)) != sizeof(resp))
 		return 5;
-	return le32toh(resp.value);
+	return ntohl(resp.value);
 }
-#else
+
+#elif __x86_64__
 #include "malloc_file.c"
 
 static unsigned char * known [32];
@@ -70,5 +71,58 @@ static int megask(TPACK pos) {
 	}
     uint32_t  idx  = blist_get(pos.b);
     return twobit_get(known[arank] + (uint64_t)((pos.w<<arank) | pos.d) * cnk(32,arank)/4, idx);
+}
+#else
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+
+static int known[32];
+static void megask_init(void) {
+	int i;
+	char fname[PATH_MAX];
+
+	struct stat buf;
+
+	for(i=0;i<9;i++) {
+		snprintf(fname,sizeof(fname),DATA_FORMAT,i);
+		if(stat(fname,&buf))
+			continue;
+		if (buf.st_size != ARRAY_SIZE_S(i))
+			error("Illegal data size %s %lld should be %lld",fname,(long long)buf.st_size, (long long)ARRAY_SIZE_S(i));
+		known[i] = open(fname,O_RDONLY);
+		if(known[i]<0)
+			error("Cannot open RO %s",fname);
+	}
+/*
+	for(i=9;i<25;i++) {
+		snprintf(fname,sizeof(fname),DATA_FORMAT,i);
+		if(stat(fname,&buf))
+			continue;
+		known[i] = (unsigned char*)malloc_file(cnk(32,i)<<(i-2),FMODE_RO,DATA_FORMAT,i);
+	}
+*/
+}
+static int megask(TPACK pos) {
+	int arank = __builtin_popcount(pos.b);
+	if(known[arank]==0)
+		return 4;
+/*
+	if (arank == 9 ) {
+		if(pos.d)
+			return 4;
+    	uint32_t  idx  = blist_get(pos.b);
+    	return twobit_get(known[arank] + (uint64_t)pos.w * cnk(32,arank)/4, idx);
+	}
+*/
+    uint32_t  idx  = blist_get(pos.b);
+	// Dirty - NOT THREAD SAVE!
+	if (lseek(known[arank], (off_t)((pos.w<<arank) | pos.d) * cnk(32,arank)/4 + idx /4, SEEK_SET) < 0 )
+		error("lseek() arank=%d",arank);
+	uint8_t val;
+	if (read(known[arank], & val, 1) != 1)
+		error("read() arank=%d",arank);
+	return twobit_get(&val, idx % 4);
 }
 #endif
