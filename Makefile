@@ -1,10 +1,12 @@
 VERSION:=0.8.0 # eight U&R
-export RANK ?= 3
+export RANK ?= 9
 export NPROC ?= $(shell grep -ic Processor /proc/cpuinfo)
 export DATADIR ?= $(realpath ../data/)
 export NODAMKA ?= 0
 export MEGASK_REMOTE ?= 0
 export CC ?= gcc
+export WRANK_LIST := $(shell "seq" $$((${RANK}-1)))
+export UTILS2
 
 -include ${RANK}.mk
 -include local.mk
@@ -29,7 +31,7 @@ UTILS := $(addprefix bin/,${UTILS})
 
 
 # helpers
-UTILS2 := mk_blist mk_c16 mk_neighbor mk_cnk
+UTILS2 += mk_blist mk_c16 mk_neighbor mk_cnk
 UTILS2 += debut
 UTILS2 += shader
 
@@ -38,13 +40,6 @@ UTILS3 += asciiart
 UTILS3 += known
 
 CUTILS := mk_data before after
-
-ifneq (${RANK},9)
-WRANK_LIST := $(shell "seq" $$((${RANK}-1)))
-else
-WRANK_LIST:= ${WRANK}
-endif
-$(info WRANK_LIST=${WRANK_LIST})
 
 all: ${UTILS} wrankers
 KLINIES := $(addprefix bin/klini${RANK}-,${WRANK_LIST})
@@ -58,9 +53,6 @@ go:	${UTILS} ${KLINIES}
 	./bin//before${RANK}
 	for i in `seq $$((${RANK}/2))` ; do ./bin/klini${RANK}-$$i ; done
 	./bin//after${RANK}
-
-${DATADIR}blist: mk_blist
-	./$<
 
 ${UTILS} : bin/%${RANK} :  %.cu main_multithread.c Makefile ${INCS}
 	@mkdir -p bin
@@ -102,7 +94,3 @@ clean:
 	${MAKE} -C dbutil clean
 	${MAKE} -C qa clean
 	rm -rf $(CLEANLIST)
-
-PROJDIR := $(shell basename ${CURDIR})
-tar:
-	cd .. ; tar -zcvf ${PROJDIR}${VERSION}.tgz ${PROJDIR}

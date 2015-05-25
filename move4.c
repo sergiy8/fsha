@@ -74,7 +74,11 @@ PROCTYPE int MoveWhite(T12 pos){
 	if(r!=R_NOMOVE) return r;
 	for(mine=pos.w;mine;mine&=mine-1) {
 		int i = _ffs(mine) - 1;
+#if IN_klini && NODAMKA
+		const uint32_t dflag = 0;
+#else
 		uint32_t dflag = pos.d & (1<<i);
+#endif
 		int x;
 		for(x=i;NEX(_UL,&x);) {
 			if( (pos.w|pos.b)&(1<<x)) break;

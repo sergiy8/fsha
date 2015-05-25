@@ -2,19 +2,50 @@
 DATATYPE unsigned char * array;
 DATATYPE unsigned long long  changed[CACHESIZE];
 
+#if KLINI_MEGASK
+#include "megask.c"
+#endif
+
+#if NODAMKA
+static FILE * pf; // Text with unknown combinations
+static int option_q;
+void pf_init(void){
+	char fname[PATH_MAX];
+	snprintf(fname,sizeof(fname),DATADIR "%d-q%d.unsorted", RANK, option_q);
+	pf = fopen(fname,"w");
+	if( pf == NULL)
+		error ("Cannot fopen %s",fname);
+}
+#endif
+
 
 PROCTYPE int StaticWhite(uint32_t w, uint32_t b, uint32_t d){
 		TPACK x = TPack((T12){w,b,d});
-	uint32_t idx;
+#if KLINI_MEGASK
+	switch(megask(x)) {
+		case ASK_DRAW:
+		case ASK_NODB:
+		case 3:
+			return 0;
+		case ASK_WHITE:
+			return 5;
+		case ASK_BLACK:
+			return -5;
+		default:
+			error("Smth wrong: %08X %X %X = %d", x.b, x.w, x.d, megask(x));
+	}
+#else
 #if NODAMKA
-	if(idamka){
-		printf("%08X %X %X\n",x.b,x.w,x.d);
+	if(x.d)
+	if(option_q){
+		if( fwrite(&x,sizeof(x),1,pf) != 1)
+			error("fwrite()");
 		return 0;
 	}
 #endif
-		idx = blist_get(x.b);
+		uint32_t idx = blist_get(x.b);
 #if NODAMKA
-        switch(twobit_get(array + (uint64_t)iwhite * JOB_SIZE, idx)){
+        switch(twobit_get(array + (uint64_t)x.w * JOB_SIZE, idx)){
 #else
         switch(twobit_get(array + (uint64_t)((x.w<<RANK)|x.d) * JOB_SIZE, idx)){
 #endif
@@ -29,6 +60,7 @@ PROCTYPE int StaticWhite(uint32_t w, uint32_t b, uint32_t d){
         default:
 			error("Smth wrong");
         }
+#endif // KLINI_MEGASK
 }
 PROCTYPE inline int MoveBlack(T12 pos){
         return StaticWhite(_brev(pos.w),_brev(pos.b),_brev(pos.d));

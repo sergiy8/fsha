@@ -1,0 +1,14 @@
+
+mk_data
+before
+klini ...
+klini -q1 - obtainig 9-q1.unsorted
+tsorter 9-q1.unsorted 9-q1
+
+p-before 9-q1 -> 9-q2 9-w 9-b 9-d
+
+klini-with-megask
+
+the goal of p_klini:
+	parse 9-q2 -> {w,b}.part 9-q3
+	Draw file remains unchanged!

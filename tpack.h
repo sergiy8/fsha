@@ -5,7 +5,7 @@ typedef struct {
 	uint32_t b;			// Max 24 popped bits
 	unsigned w : BITS_FOR_IWHITE;	// Max 12 popped bits
 	unsigned d : BITS_FOR_IWHITE;	// Max 24 popped bits
-} TPACK;  // 10 bytes
+} __attribute__((packed)) TPACK;  // 10 bytes
 
 // Slow and accurate - use it for user-inputted data
 static inline int TCreate(TPACK * cp, unsigned b, unsigned w, unsigned d) {

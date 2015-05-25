@@ -65,12 +65,18 @@ static void glukalo(int s){
 static pthread_t pid [NPROC];
 
 static int option_v;
-#define usage(prog) error("\n\tUsage: %s [-v]",prog)
+static int option_q;
+#define usage(prog) error("\n\tUsage: %s [-vq]",prog)
 int main(int argc, char ** argv){
 	unsigned  i;
-        while ((i = getopt(argc, argv, "v")) != -1)
+        while ((i = getopt(argc, argv, "vq:")) != -1)
                switch (i) {
 		case 'v': option_v++; continue;
+		case 'q':
+				option_q = atoi(optarg);
+				if (option_q == 0)
+					error("Invalid -q=%s",optarg);
+				continue;
 		default : usage(argv[0]);
 	}
 	if(optind!=argc) usage(argv[0]);
@@ -91,6 +97,15 @@ int main(int argc, char ** argv){
         for(i=1;i<RANK;i++){
                 known[i] = (unsigned char*)malloc_file(ARRAY_SIZE_S(i),FMODE_RO,DATA_FORMAT,i);
 	}
+#endif
+
+#if KLINI_MEGASK
+	megask_init();
+#endif
+
+#if IN_klini && NODAMKA
+	if(option_q)
+		pf_init();
 #endif
 
 //#if WRANK || IN_klini || IN_before
@@ -126,14 +141,18 @@ for(;;) {
 #endif
 	}
 	alarm(0);
-#ifdef IN_klini
+#if IN_klini
 	if(total==0) break;
 	tprintf("changed=%ju %s\n",total,itoa(total));
 	syslog(LOG_INFO,"changed=%ju %s\n",total,itoa(total));
-#ifdef WRANK
+#if WRANK || (IN_klini && NODAMKA)
 //	syslog(LOG_INFO,"finished with execl()");
 	char k2[PATH_MAX];
+#if WRANK
 	snprintf(k2,sizeof(k2),"./bin/klini%d-%d",RANK,RANK-WRANK);
+#else
+	snprintf(k2,sizeof(k2),"%s",argv[0]);
+#endif
 	execl(k2,k2,NULL);
 	panic();
 #endif

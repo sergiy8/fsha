@@ -3,5 +3,8 @@ select
 shader
 asciiart
 known
+p_before
+p_klini
+tsorter
 *.o
 local.mk
