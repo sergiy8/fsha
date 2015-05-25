@@ -64,11 +64,3 @@ KERNEL
 		atomicAdd(changed+ij%CACHESIZE,1);
 	}
 }
-
-static void PutStat(void){
-        FILE * f = fopen(STATFILE(RANK),"w");
-        if(f==NULL) return;
-        fprintf(f,"before\n");
-        fclose(f);
-}
-

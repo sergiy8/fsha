@@ -162,7 +162,6 @@ for(;;) {
 	tprintf("changed=%ju %s\n",total, itoa(total));
 	syslog(LOG_INFO,"changed=%ju %s\n", total, itoa(total));
 #endif
-	PutStat();
 	return 0;
 }
 

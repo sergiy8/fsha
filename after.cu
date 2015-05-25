@@ -20,9 +20,3 @@ KERNEL
 		}
 	}
 }
-
-#include <unistd.h>
-static void PutStat(void){
-	unlink(STATFILE(RANK));
-}
-

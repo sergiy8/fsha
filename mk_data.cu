@@ -29,11 +29,3 @@ KERNEL
 		}
 	}
 }
-
-static void PutStat(void){
-        FILE * f = fopen(STATFILE(RANK),"w");
-        if(f==NULL) return;
-        fprintf(f,"mk_data\n");
-        fclose(f);
-}
-

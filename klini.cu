@@ -70,14 +70,3 @@ KERNEL
 		atomicAdd(changed+ij%CACHESIZE,1);
 	}
 }
-
-static void PutStat(void){
-	FILE * f = fopen(STATFILE(RANK),"w");
-	if(f==NULL) return;
-#ifdef WRANK
-	fprintf(f,"klini WRANK=%d\n",WRANK);
-#else
-	fprintf(f,"klini\n");
-#endif
-	fclose(f);
-}
