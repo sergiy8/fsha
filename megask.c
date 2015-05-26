@@ -1,11 +1,11 @@
-enum {
+typedef enum {
 	ASK_DRAW,
 	ASK_WHITE,
 	ASK_BLACK,
 	ASK_BAD,
 	ASK_NODB, // like Http error 404  ;)
 	ASK_IO,
-};
+} ask_t;
 #if MEGASK_REMOTE
 #include <unistd.h>
 #include <sys/socket.h>
@@ -22,7 +22,7 @@ struct sockaddr_in servaddr = {
 	if ( connect(sha_fd, (struct sockaddr*)&servaddr,sizeof(servaddr)))
 		error("Cannot connect %s:%d",REMOTE_HOST, REMOTE_PORT);
 }
-static int megask(TPACK pos) {
+static ask_t megask(TPACK pos) {
 	struct sha_req req = {
 		.cmd = htonl(SHA_BXD),
 		.b = htonl(pos.b),
@@ -59,14 +59,19 @@ static void megask_init(void) {
 	megask9_init();
 }
 
-static int megask(TPACK pos) {
+static ask_t megask(TPACK pos) {
 	int arank = __builtin_popcount(pos.b);
-	if (arank == 9 )
-		return megask9(pos);
-	if(known[arank]==NULL)
+	switch (arank) {
+	default:
 		return ASK_NODB;
-    uint32_t  idx  = blist_get(pos.b);
-    return twobit_get(known[arank] + (uint64_t)((pos.w<<arank) | pos.d) * cnk(32,arank)/4, idx);
+	case 9:
+		return megask9(pos);
+	case 1 ... 8:
+		if(known[arank]==NULL)
+			return ASK_NODB;
+    	uint32_t  idx  = blist_get(pos.b);
+    	return twobit_get(known[arank] + (uint64_t)((pos.w<<arank) | pos.d) * cnk(32,arank)/4, idx);
+	}
 }
 #else
 #error Damaged
@@ -101,7 +106,7 @@ static void megask_init(void) {
 	}
 */
 }
-static int megask(TPACK pos) {
+static ask_t megask(TPACK pos) {
 	int arank = __builtin_popcount(pos.b);
 	if(known[arank]==0)
 		return ASK_NODB;
