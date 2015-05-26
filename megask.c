@@ -1,3 +1,11 @@
+enum {
+	ASK_DRAW,
+	ASK_WHITE,
+	ASK_BLACK,
+	ASK_BAD,
+	ASK_NODB, // like Http error 404  ;)
+	ASK_IO,
+};
 #if MEGASK_REMOTE
 #include <unistd.h>
 #include <sys/socket.h>
@@ -15,10 +23,6 @@ struct sockaddr_in servaddr = {
 		error("Cannot connect %s:%d",REMOTE_HOST, REMOTE_PORT);
 }
 static int megask(TPACK pos) {
-	if (pos.w==0)
-		return 2;
-	if (pos.w == ALLONE(_popc(pos.b)))
-		return 1;
 	struct sha_req req = {
 		.cmd = htonl(SHA_BXD),
 		.b = htonl(pos.b),
@@ -27,16 +31,17 @@ static int megask(TPACK pos) {
 	};
 	struct sha_resp resp;
 	if(write(sha_fd,&req,sizeof(req)) != sizeof(req))
-		return 5;
+		return ASK_IO;
 	if(read(sha_fd, &resp, sizeof(resp)) != sizeof(resp))
-		return 5;
+		return ASK_IO;
 	return ntohl(resp.value);
 }
 
 #elif __x86_64__
 #include "malloc_file.c"
+#include "megask9.c"
 
-static unsigned char * known [32];
+static unsigned char * known [9];
 
 static void megask_init(void) {
 	int i;
@@ -51,28 +56,20 @@ static void megask_init(void) {
 			continue;
 		known[i] = (unsigned char*)malloc_file(ARRAY_SIZE_S(i),FMODE_RO,DATA_FORMAT,i);
 	}
-	for(i=9;i<25;i++) {
-		snprintf(fname,sizeof(fname),DATA_FORMAT,i);
-		if(stat(fname,&buf))
-			continue;
-		known[i] = (unsigned char*)malloc_file(cnk(32,i)<<(i-2),FMODE_RO,DATA_FORMAT,i);
-	}
+	megask9_init();
 }
 
 static int megask(TPACK pos) {
 	int arank = __builtin_popcount(pos.b);
+	if (arank == 9 )
+		return megask9(pos);
 	if(known[arank]==NULL)
-		return 4;
-	if (arank == 9 ) {
-		if(pos.d)
-			return 4;
-    	uint32_t  idx  = blist_get(pos.b);
-    	return twobit_get(known[arank] + (uint64_t)pos.w * cnk(32,arank)/4, idx);
-	}
+		return ASK_NODB;
     uint32_t  idx  = blist_get(pos.b);
     return twobit_get(known[arank] + (uint64_t)((pos.w<<arank) | pos.d) * cnk(32,arank)/4, idx);
 }
 #else
+#error Damaged
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -107,7 +104,7 @@ static void megask_init(void) {
 static int megask(TPACK pos) {
 	int arank = __builtin_popcount(pos.b);
 	if(known[arank]==0)
-		return 4;
+		return ASK_NODB;
 /*
 	if (arank == 9 ) {
 		if(pos.d)

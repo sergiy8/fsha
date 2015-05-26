@@ -11,7 +11,7 @@ static WINDOW * wdoska, *whex, *wlog, *wask, *whelp, *wpen;
 #define putlog(fmt,args...) do{wprintw(wlog,fmt"\n",##args); wrefresh(wlog);}while(0)
 #include "megask.c"
 
-enum { COLOR_SUCCESS=1, COLOR_FAIL, COLOR_DRAW};
+enum { COLOR_SUCCESS=1, COLOR_FAIL, COLOR_DRAW, COLOR_NODB};
 
 #define remove_bit(x,n)   x = ((x & ~ALLONE((n)+1)) >> 1) | (x & ALLONE(n))
 #define insert_bit(x,n,b) x = ((x & ~ALLONE(n))<<1) | (!!(b) << (n)) | (x & ALLONE(n))
@@ -138,22 +138,19 @@ const char * summary(void){
 	int value = megask(cp);
 	switch(value) {
 		default: return "InternalError";
-		case 0:
-			wattron(wask,COLOR_PAIR(COLOR_YELLOW));
+		case ASK_BAD:
+		case ASK_DRAW:
+			wattron(wask,COLOR_PAIR(COLOR_DRAW));
 			return "Draw";
-		case 1:
+		case ASK_WHITE:
 			wattron(wask,COLOR_PAIR(COLOR_SUCCESS));
 			return "WhiteWin";
-		case 2:
+		case ASK_BLACK:
 			wattron(wask,COLOR_PAIR(COLOR_FAIL));
 			return "BlackWin";
-		case 3:
-			wattron(wask,COLOR_PAIR(COLOR_YELLOW));
-			return "DrawAfterTakege";
-		case 4:
+		case ASK_NODB:
+			wattron(wask,COLOR_PAIR(COLOR_NODB));
 			return "NotInBase";
-		case 5:
-			return "CommunicationError";
 	}
 }
 
@@ -184,10 +181,12 @@ int MoveBlack(T12 pos){
 				FUTUREX + (maxfuture % perline)*FUTURESX);
 		WINDOW * this = future[maxfuture].doska;
 		int value = revert_ask(megask(TPack((T12){_brev(pos.w),_brev(pos.b),_brev(pos.d)})));
-		if(value == 1)
+		if(value == ASK_WHITE)
 			wattron(this,COLOR_PAIR(COLOR_SUCCESS));
-		else if (value == 2)
+		else if (value == ASK_BLACK)
 			wattron(this,COLOR_PAIR(COLOR_FAIL));
+		else if (value == ASK_NODB)
+			wattron(this,COLOR_PAIR(COLOR_NODB));
 		switch (IsForced(TRotate(future[maxfuture].cp))){
 		case -2:
 			wattron(this,A_BOLD);
@@ -242,7 +241,8 @@ new_screen:
 	start_color();
 	init_pair(COLOR_SUCCESS,COLOR_GREEN,COLOR_BLACK);
 	init_pair(COLOR_FAIL,COLOR_RED,COLOR_BLACK);
-	init_pair(COLOR_DRAW,COLOR_YELLOW,COLOR_BLACK);
+	init_pair(COLOR_DRAW,COLOR_WHITE,COLOR_BLACK);
+	init_pair(COLOR_NODB,COLOR_BLUE,COLOR_BLACK);
 
 	mousemask(ALL_MOUSE_EVENTS, NULL);
 	cbreak();
@@ -252,8 +252,6 @@ new_screen:
 
 	whex = newwin(HEXSY,HEXSX,HEXY,HEXX);
 	keypad(whex,TRUE);
-//	idcok(whex,TRUE);
-//	immedok(whex,TRUE);
 
 	wlog = newwin(LOGSY,LOGSX,LOGY,LOGX);
 	scrollok(wlog,TRUE);

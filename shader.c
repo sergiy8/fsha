@@ -20,7 +20,7 @@ static void * dialogue(void * arg) {
 			break;
 		switch(ntohl(req.cmd)) {
 		default:
-			resp.value = -1;
+			resp.value = ASK_IO;
 			break;
 		case SHA_BXD:
 			resp.value = megask((TPACK){ntohl(req.b), ntohl(req.w), ntohl(req.d)});
