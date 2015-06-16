@@ -12,6 +12,7 @@ typedef enum {
 #include <netinet/in.h>
 #include <arpa/inet.h>
 static int sha_fd;
+static uint32_t remote_version;
 static void megask_init(void) {
 struct sockaddr_in servaddr = {
 	.sin_family = AF_INET,
@@ -21,6 +22,12 @@ struct sockaddr_in servaddr = {
 	sha_fd = socket(AF_INET,SOCK_STREAM,0);
 	if ( connect(sha_fd, (struct sockaddr*)&servaddr,sizeof(servaddr)))
 		error("Cannot connect %s:%d",REMOTE_HOST, REMOTE_PORT);
+	if(write(sha_fd,&(struct sha_req){.cmd=htonl(SHA_VER)},sizeof(struct sha_req)) != sizeof(struct sha_req))
+		error("Cannot ask version from %s:%d",REMOTE_HOST,REMOTE_PORT);
+	struct sha_resp resp;
+	if(read(sha_fd, &resp, sizeof(resp)) != sizeof(resp))
+		error("Ill version reply from %s:%d",REMOTE_HOST, REMOTE_PORT);
+	remote_version = ntohl(resp.version);
 }
 static ask_t megask(TPACK pos) {
 	struct sha_req req = {

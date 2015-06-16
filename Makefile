@@ -1,24 +1,24 @@
 VERSION:=0.8.0 # eight U&R
-NPROC ?= $(shell grep -ic Processor /proc/cpuinfo)
-MAKEFLAGS = -j $(NPROC)
-RANK ?= 8
-ifeq (${RANK},9)
-NODAMKA ?= 1
-endif
-export DATADIR := $(realpath ../data/)
+export RANK ?= 8
+export NPROC ?= $(shell grep -ic Processor /proc/cpuinfo)
+export DATADIR ?= $(realpath ../data/)
+export NODAMKA ?= 0
+export CC ?= gcc
 
-export CC := gcc -Wall -DRANK=${RANK} $(if ${WRANK},-DWRANK=${WRANK}) $(if ${NODAMKA},-DNODAMKA=${NODAMKA})
-CC += -Wno-multichar
+-include ${RANK}.mk
+-include local.mk
+MAKEFLAGS = -j $(NPROC)
+CC += -Wall -DRANK=${RANK}
 CC += -DDATADIR=\"${DATADIR}/\"
 CC += -DNPROC=$(NPROC)
+CC += -Wno-multichar
 CC += -std=gnu99
-
--include local.mk
+CC += $(if ${WRANK},-DWRANK=${WRANK}) $(if ${NODAMKA},-DNODAMKA=${NODAMKA})
 
 NVCC:= nvcc -Xptxas -v ${CUDA_GPU} -DRANK=${RANK}
 CUDALIBS:= -L/usr/local/cuda/lib64 -L/usr/local/cuda/lib -lcuda -lcudart
 
-INCS := sha.h arch.h twobit.h blist.h neighbor.h tprintf.h percent.h tpack.h
+INCS := sha.h arch.h twobit.h blist.h neighbor.h tprintf.h percent.h tpack.h remote.h
 INCS += cnk.inc neighbor.inc megask.c move4.c malloc_file.c
 
 # DB processors

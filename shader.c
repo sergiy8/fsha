@@ -25,6 +25,9 @@ static void * dialogue(void * arg) {
 		case SHA_BXD:
 			resp.value = megask((TPACK){ntohl(req.b), ntohl(req.w), ntohl(req.d)});
 			break;
+		case SHA_VER:
+			resp.value = REMOTE_PROTOCOL_VERSION;
+			break;
 		}
 		resp.value = htonl(resp.value);
 		if (write(fd,&resp,sizeof(resp)) != sizeof(resp))

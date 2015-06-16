@@ -286,7 +286,7 @@ int main(int argc, char ** argv){
 	mvwprintw(whelp,1,0,"Shift/Arrows - shift position");
 	mvwprintw(whelp,2,0,"Shift/Digit - change pawn");
 #if MEGASK_REMOTE
-	mvwprintw(whelp,3,0,"DB=%s",REMOTE_HOST);
+	mvwprintw(whelp,3,0,"DB=%s v.%X",REMOTE_HOST,remote_version);
 #else
 	mvwprintw(whelp,3,0,"DB=%s",DATADIR);
 #endif
