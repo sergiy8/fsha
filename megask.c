@@ -88,8 +88,11 @@ static void megask_init(void) {
 
 	for(i=0;i<9;i++) {
 		snprintf(fname,sizeof(fname),DATA_FORMAT,i);
-		if(stat(fname,&buf))
+		if(stat(fname,&buf)){
+			fprintf(stderr,"%s:%m \n",fname);
+			errno=0;
 			continue;
+		}
 		if (buf.st_size != ARRAY_SIZE_S(i))
 			error("Illegal data size %s %lld should be %lld",fname,(long long)buf.st_size, (long long)ARRAY_SIZE_S(i));
 		known[i] = open(fname,O_RDONLY);

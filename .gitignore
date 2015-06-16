@@ -3,3 +3,4 @@ select
 shader
 asciiart
 *.o
+local.mk

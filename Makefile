@@ -8,13 +8,13 @@ endif
 export DATADIR := $(realpath ../data/)
 
 export CC := gcc -Wall -DRANK=${RANK} $(if ${WRANK},-DWRANK=${WRANK}) $(if ${NODAMKA},-DNODAMKA=${NODAMKA})
-CC += -Wno-multichar -O3
-CC += -march=native
+CC += -Wno-multichar
 CC += -DDATADIR=\"${DATADIR}/\"
 CC += -DNPROC=$(NPROC)
 CC += -std=gnu99
 
--include cudablin/cuda_gpu.mk
+-include local.mk
+
 NVCC:= nvcc -Xptxas -v ${CUDA_GPU} -DRANK=${RANK}
 CUDALIBS:= -L/usr/local/cuda/lib64 -L/usr/local/cuda/lib -lcuda -lcudart
 
