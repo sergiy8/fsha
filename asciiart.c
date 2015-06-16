@@ -51,6 +51,7 @@ static void pop_h(void) {
 static int maxfuture = 0;
 static struct {
 	TPACK cp;
+	int value;
 	WINDOW * doska;
 } future[MAXFUTURE];
 
@@ -123,7 +124,7 @@ static void doska(WINDOW * wdoska, TPACK cp){
 	wrefresh(wdoska);
 }
 
-const char * summary(void){
+const char * summary(int value){
 	int arank = _popc(cp.b);
 	if (_popc(cp.b) ==0 ||
 		_popc(cp.b) > 24 ||
@@ -135,7 +136,6 @@ const char * summary(void){
 		return "IllegalDamka";
 	if ( IsForced(cp))
 		wattron(wask,A_REVERSE);
-	int value = megask(cp);
 	switch(value) {
 		default: return "InternalError";
 		case ASK_BAD:
@@ -172,22 +172,48 @@ int MoveBlack(T12 pos){
 		putlog("Max=%d, Ign wbd=%08X %08X %08X",MAXFUTURE, pos.w, pos.b, pos.d);
 		return 0;
 	}
-	const int perline = (COLS - FUTUREX ) / FUTURESX;
 	future[maxfuture].cp = TPack(swap_t12(pos));
-	if (perline) {
-		if(future[maxfuture].doska == NULL )
-			future[maxfuture].doska = newwin(FUTURESY,FUTURESX,
-				FUTUREY + (maxfuture / perline )*FUTURESY,
-				FUTUREX + (maxfuture % perline)*FUTURESX);
-		WINDOW * this = future[maxfuture].doska;
-		int value = revert_ask(megask(TPack((T12){_brev(pos.w),_brev(pos.b),_brev(pos.d)})));
-		if(value == ASK_WHITE)
+	future[maxfuture].value = revert_ask(megask(TPack((T12){_brev(pos.w),_brev(pos.b),_brev(pos.d)})));
+	maxfuture++;
+	return 1;
+}
+#include "move4.c"
+void EraseFuture(void){
+	for(int x=0;x<maxfuture;x++){
+		werase(future[x].doska);
+		wrefresh(future[x].doska);
+		delwin(future[x].doska);
+		future[x].doska = 0;
+	}
+	maxfuture=0;
+}
+void DrawFuture(void){
+	const int perline = (COLS - FUTUREX ) / FUTURESX;
+	if (!perline)
+		return;
+	int f;
+	for(f=0;f< maxfuture;f++){
+		if(future[f].doska) {
+			werase(future[f].doska);
+			wrefresh(future[f].doska);
+			delwin(future[f].doska);
+			future[f].doska = 0;
+		}
+		if ( FUTUREY + ( f/perline + 1) * FUTURESY > LINES ) {
+			putlog("Small window, can' draw %d", f);
+			continue;
+		}
+		future[f].doska = newwin(FUTURESY,FUTURESX,
+				FUTUREY + (f / perline )*FUTURESY,
+				FUTUREX + (f % perline)*FUTURESX);
+		WINDOW * this = future[f].doska;
+		if(future[f].value == ASK_WHITE)
 			wattron(this,COLOR_PAIR(COLOR_SUCCESS));
-		else if (value == ASK_BLACK)
+		else if (future[f].value == ASK_BLACK)
 			wattron(this,COLOR_PAIR(COLOR_FAIL));
-		else if (value == ASK_NODB)
+		else if (future[f].value == ASK_NODB)
 			wattron(this,COLOR_PAIR(COLOR_NODB));
-		switch (IsForced(TRotate(future[maxfuture].cp))){
+		switch (IsForced(TRotate(future[f].cp))){
 		case -2:
 			wattron(this,A_BOLD);
 			wattron(this,A_REVERSE);
@@ -197,14 +223,11 @@ int MoveBlack(T12 pos){
 			break;
 		default:;
 		}
-		mvwprintw(this,DOSKASY,0,"%X %X %X=%d", future[maxfuture].cp.b, future[maxfuture].cp.w, future[maxfuture].cp.d, value);
+		mvwprintw(this,DOSKASY,0,"%X %X %X=%d", future[f].cp.b, future[f].cp.w, future[f].cp.d, future[f].value);
 		wattrset(this,0);
-		doska(this, future[maxfuture].cp);
+		doska(this, future[f].cp);
 	}
-	maxfuture++;
-	return 0;
 }
-#include "move4.c"
 
 int main(int argc, char ** argv){
 	if (argc == 5 ) { // Extra value from klini log
@@ -235,7 +258,6 @@ int main(int argc, char ** argv){
 	megask_init();
 
 	setlocale(LC_ALL,"");
-new_screen:
 	initscr();
 
 	start_color();
@@ -278,11 +300,12 @@ new_screen:
 new_doska:
 	doska(wdoska, cp);
 
+	int value = megask(cp);
 	wattrset(wask,0);
 	mvwprintw(wask, 0, 0, "Move: %c", rotate?'Y':'X');
-	mvwprintw(wask, 1, 0, "Megask: %d", megask(cp));
+	mvwprintw(wask, 1, 0, "Megask: %d", value);
 	mvwprintw(wask, 2, 0, "Arank : %c-%c", rank_name[_popc(cp.b)],rank_name[_popc(cp.w)]);
-	mvwprintw(wask, 3, 0, "%s",summary());
+	mvwprintw(wask, 3, 0, "%s",summary(value));
 	wclrtoeol(wask);
 	 wattrset(wask,0);
 	mvwprintw(wask, 4, 0, "%d",curhistory);
@@ -290,13 +313,10 @@ new_doska:
 	wclrtobot(wask);
 	wrefresh(wask);
 
-	for(int x=0;x<maxfuture;x++){
-		werase(future[x].doska);
-		wrefresh(future[x].doska);
-	}
-
-	maxfuture=0;
+	EraseFuture();
 	MoveWhite(TUnpack(cp));
+new_screen:
+	DrawFuture();
 
 	char str[HEXSX];
 	int pos=0;
@@ -435,13 +455,6 @@ new_doska:
 			case KEY_RESIZE:
 				if(COLS <= FUTUREX || LINES <= LOGY )
 					continue;
-				for(;maxfuture;maxfuture--) {
-					werase(future[maxfuture].doska);
-					wrefresh(future[maxfuture].doska);
-					delwin(future[maxfuture].doska);
-					future[maxfuture].doska = 0;
-				}
-				endwin();
 				goto new_screen;
 		}
 	}

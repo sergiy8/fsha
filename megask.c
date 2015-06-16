@@ -74,7 +74,6 @@ static ask_t megask(TPACK pos) {
 	}
 }
 #else
-#error Damaged
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -97,27 +96,11 @@ static void megask_init(void) {
 		if(known[i]<0)
 			error("Cannot open RO %s",fname);
 	}
-/*
-	for(i=9;i<25;i++) {
-		snprintf(fname,sizeof(fname),DATA_FORMAT,i);
-		if(stat(fname,&buf))
-			continue;
-		known[i] = (unsigned char*)malloc_file(cnk(32,i)<<(i-2),FMODE_RO,DATA_FORMAT,i);
-	}
-*/
 }
 static ask_t megask(TPACK pos) {
 	int arank = __builtin_popcount(pos.b);
 	if(known[arank]==0)
 		return ASK_NODB;
-/*
-	if (arank == 9 ) {
-		if(pos.d)
-			return 4;
-    	uint32_t  idx  = blist_get(pos.b);
-    	return twobit_get(known[arank] + (uint64_t)pos.w * cnk(32,arank)/4, idx);
-	}
-*/
     uint32_t  idx  = blist_get(pos.b);
 	// Dirty - NOT THREAD SAVE!
 	if (lseek(known[arank], (off_t)((pos.w<<arank) | pos.d) * cnk(32,arank)/4 + idx /4, SEEK_SET) < 0 )
