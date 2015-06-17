@@ -3,6 +3,7 @@ export RANK ?= 8
 export NPROC ?= $(shell grep -ic Processor /proc/cpuinfo)
 export DATADIR ?= $(realpath ../data/)
 export NODAMKA ?= 0
+export MEGASK_REMOTE ?= 0
 export CC ?= gcc
 
 -include ${RANK}.mk
@@ -35,6 +36,7 @@ UTILS2 += shader
 
 UTILS3 := select
 UTILS3 += asciiart
+UTILS3 += known
 
 CUTILS := mk_data before after
 
@@ -83,7 +85,7 @@ select.inc: plugin_select Makefile
 
 NCURSES_LIBS := $(shell ncurses5-config --libs)
 asciiart: asciiart.c forced.o Makefile ${INCS}
-	${CC} -DMEGASK_REMOTE=1 $< forced.o ${NCURSES_LIBS} -o$@
+	${CC} -DMEGASK_REMOTE=${MEGASK_REMOTE} $< forced.o ${NCURSES_LIBS} -o$@
 forced.o : forced.c Makefile ${INCS}
 	${CC} -c $< -o$@
 

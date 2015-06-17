@@ -5,3 +5,5 @@ byte-streamed klini
 twobits - avoid two access
 malloc - FMODE_TMP
 enum position status
+
+megask - always try open with mmap(), than open()

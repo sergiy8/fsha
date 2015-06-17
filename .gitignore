@@ -2,5 +2,6 @@ bin
 select
 shader
 asciiart
+known
 *.o
 local.mk

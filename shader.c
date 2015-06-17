@@ -28,6 +28,14 @@ static void * dialogue(void * arg) {
 		case SHA_VER:
 			resp.value = REMOTE_PROTOCOL_VERSION;
 			break;
+		case SHA_KNO:
+			{ int i;
+			  resp.value = 0;
+			  for(i=0;i< sizeof(known)/sizeof(known[0]); i++)
+				if(known[i])
+					resp.value |= 1<<i;
+			}
+			break;
 		}
 		resp.value = htonl(resp.value);
 		if (write(fd,&resp,sizeof(resp)) != sizeof(resp))

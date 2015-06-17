@@ -1,8 +1,8 @@
 #define REMOTE_PORT 51234
-//#define REMOTE_HOST "192.168.13.111"
-#define REMOTE_HOST "192.168.1.2"
+#define REMOTE_HOST "192.168.13.111"
+//#define REMOTE_HOST "192.168.1.2"
 
-#define REMOTE_PROTOCOL_VERSION 0x100
+#define REMOTE_PROTOCOL_VERSION 0x101
 
 // Network endian !
 
