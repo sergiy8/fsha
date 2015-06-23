@@ -21,6 +21,14 @@ static void * thread(void * arg){
 	unsigned char * job = array;
 	const unsigned int n = (uintptr_t)arg;
 #if NODAMKA
+#if IN_klini
+    char fname[PATH_MAX];
+    snprintf(fname,sizeof(fname),DATADIR"%d-q-klini-%d",RANK,n);
+    FILE * f = fopen(fname,"w");
+    if(f==NULL)
+        error("Can't create %s:%m",fname);
+            pthread_setspecific(key,f);
+#endif
 	i[n]=0; {
 #else
 	for(i[n]=0;i[n]<(1<<RANK);i[n]++) {
@@ -99,13 +107,8 @@ int main(int argc, char ** argv){
 	}
 #endif
 
-#if KLINI_MEGASK
-	megask_init();
-#endif
-
-#if IN_klini && NODAMKA
-	if(option_q)
-		pf_init();
+#ifdef EXTRA_INIT
+	EXTRA_INIT;
 #endif
 
 //#if WRANK || IN_klini || IN_before

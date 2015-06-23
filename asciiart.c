@@ -138,16 +138,18 @@ const char * summary(int value){
 		wattron(wask,A_REVERSE);
 	switch(value) {
 		default: return "InternalError";
-		case ASK_BAD:
-		case ASK_DRAW:
+		case ASK_UNK:
 			wattron(wask,COLOR_PAIR(COLOR_DRAW));
-			return "Draw";
+			return "Unknown";
 		case ASK_WHITE:
 			wattron(wask,COLOR_PAIR(COLOR_SUCCESS));
 			return "WhiteWin";
 		case ASK_BLACK:
 			wattron(wask,COLOR_PAIR(COLOR_FAIL));
 			return "BlackWin";
+		case ASK_DRAW:
+			wattron(wask,COLOR_PAIR(COLOR_DRAW));
+			return "Draw";
 		case ASK_NODB:
 			wattron(wask,COLOR_PAIR(COLOR_NODB));
 			return "NotInBase";

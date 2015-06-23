@@ -11,20 +11,26 @@ static void megask9_init(void) {
 		return;
 	simple9 = malloc_file(cnk(32,9)<<(9-2), FMODE_RO, DATA_FORMAT, 9 );
 
-	if(stat(DATADIR"9-b",&buf))
-		error("9-b");
-	sb = malloc_file(buf.st_size, FMODE_RO, DATADIR"9-b");
-	sb_count = buf.st_size / sizeof(TPACK);
+	if(stat(DATADIR"9-b",&buf)) {
+		dbg(DATADIR"9-b:%m");
+	} else {
+		sb = malloc_file(buf.st_size, FMODE_RO, DATADIR"9-b");
+		sb_count = buf.st_size / sizeof(TPACK);
+	}
 
-	if(stat(DATADIR"9-w",&buf))
-		error("9-w");
-	sw = malloc_file(buf.st_size, FMODE_RO, DATADIR"9-w");
-	sw_count = buf.st_size / sizeof(TPACK);
+	if(stat(DATADIR"9-w",&buf)) {
+		dbg(DATADIR"9-w:%m");
+	} else {
+		sw = malloc_file(buf.st_size, FMODE_RO, DATADIR"9-w");
+		sw_count = buf.st_size / sizeof(TPACK);
+	}
 
-	if(stat(DATADIR"9-d",&buf))
-		error("9-d");
-	sd = malloc_file(buf.st_size, FMODE_RO, DATADIR"9-d");
-	sd_count = buf.st_size / sizeof(TPACK);
+	if(stat(DATADIR"9-d",&buf)) {
+		dbg(DATADIR"9-d:%m");
+	} else {
+		sd = malloc_file(buf.st_size, FMODE_RO, DATADIR"9-d");
+		sd_count = buf.st_size / sizeof(TPACK);
+	}
 }
 
 static ask_t megask9(TPACK pos) {

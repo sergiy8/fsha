@@ -3,8 +3,7 @@ select
 shader
 asciiart
 known
-p_before
-p_klini
-tsorter
+merger
+qprocessor
 *.o
 local.mk

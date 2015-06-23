@@ -1,4 +1,24 @@
 
+klini:
+	creating 9-qN.unsorted
+
+p_klini:
+	proceed 9
+	creating 9-q 9-w 9-d
+
+
+9-q*  input questionary file, unsorted
+  tsorter - combine all of them into 9-q - sorted
+
+  qprocessor:
+		proceed 9-q,
+		creating 9-w.part, 9-b-part, 9-d part
+  tsorter:
+		tsorter 9-w 9-w.part
+		tsorter 9-b 9-b.part
+		tsorter 9-d 9-d.part
+
+
 mk_data
 before
 klini ...
@@ -12,3 +32,6 @@ klini-with-megask
 the goal of p_klini:
 	parse 9-q2 -> {w,b}.part 9-q3
 	Draw file remains unchanged!
+
+qprocessor:
+	a

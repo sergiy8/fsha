@@ -21,7 +21,7 @@ CC += $(if ${WRANK},-DWRANK=${WRANK}) $(if ${NODAMKA},-DNODAMKA=${NODAMKA})
 NVCC:= nvcc -Xptxas -v ${CUDA_GPU} -DRANK=${RANK}
 CUDALIBS:= -L/usr/local/cuda/lib64 -L/usr/local/cuda/lib -lcuda -lcudart
 
-INCS := sha.h arch.h twobit.h blist.h neighbor.h tprintf.h percent.h tpack.h remote.h
+INCS += sha.h arch.h twobit.h blist.h neighbor.h tprintf.h percent.h tpack.h remote.h
 INCS += cnk.inc neighbor.inc megask.c move5.c malloc_file.c
 
 # DB processors
@@ -54,30 +54,30 @@ go:	${UTILS} ${KLINIES}
 	for i in `seq $$((${RANK}/2))` ; do ./bin/klini${RANK}-$$i ; done
 	./bin//after${RANK}
 
-${UTILS} : bin/%${RANK} :  %.cu main_multithread.c Makefile ${INCS}
+${UTILS} : bin/%${RANK} :  %.cu main_multithread.c ${MAKEFILE_LIST} ${INCS}
 	@mkdir -p bin
 	${CC} -DIN_$* -include sha.h -include $< main_multithread.c -lpthread -o$@
 
-${KLINIES}: bin/klini${RANK}-% : klini.cu main_multithread.c Makefile ${INCS}
+${KLINIES}: bin/klini${RANK}-% : klini.cu main_multithread.c ${MAKEFILE_LIST} ${INCS}
 	@mkdir -p bin
 	${CC} -DIN_klini -DWRANK=$* -include sha.h -include klini.cu main_multithread.c -lpthread -o$@
 
-${STATS}: bin/stat${RANK}-% : stat.cu main_multithread.c Makefile ${INCS}
+${STATS}: bin/stat${RANK}-% : stat.cu main_multithread.c ${MAKEFILE_LIST} ${INCS}
 	@mkdir -p bin
 	${CC} -DIN_stat -DWRANK=$* -include sha.h -include stat.cu main_multithread.c -lpthread -o$@
 
-${UTILS2} : % :  %.c Makefile ${INCS}
+${UTILS2} : % :  %.c ${MAKEFILE_LIST} ${INCS}
 	${CC} $< -lpthread  -o$@
 
-select: select.c Makefile select.inc ${INCS}
+select: select.c ${MAKEFILE_LIST} select.inc ${INCS}
 	${CC} -Iplugin_select -I. $< -lpthread -lreadline -o$@
-select.inc: plugin_select Makefile
+select.inc: plugin_select ${MAKEFILE_LIST}
 	ls $</*.c | awk '{print "#include","<"$$1">";}' > $@
 
 NCURSES_LIBS := $(shell ncurses5-config --libs)
-asciiart: asciiart.c forced.o Makefile ${INCS}
+asciiart: asciiart.c forced.o ${MAKEFILE_LIST} ${INCS}
 	${CC} -DMEGASK_REMOTE=${MEGASK_REMOTE} $< forced.o ${NCURSES_LIBS} -o$@
-forced.o : forced.c Makefile ${INCS}
+forced.o : forced.c ${MAKEFILE_LIST} ${INCS}
 	${CC} -c $< -o$@
 
 $(addprefix c,${CUTILS}) : c% : %.kernel cudamain.cpp cudablin/cudablin.h ${INCS}

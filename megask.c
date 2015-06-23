@@ -1,8 +1,8 @@
 typedef enum {
-	ASK_DRAW,
+	ASK_UNK,
 	ASK_WHITE,
 	ASK_BLACK,
-	ASK_BAD,
+	ASK_DRAW,
 	ASK_NODB, // like Http error 404  ;)
 	ASK_IO,
 } ask_t;
