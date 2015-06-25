@@ -19,15 +19,15 @@ PROCTYPE int StaticWhite(uint32_t w, uint32_t b, uint32_t d){
         switch(twobit_get(array + (uint64_t)((x.w<<RANK)|x.d) * JOB_SIZE, idx)){
 #endif
         case 3 : // Cimus ZZ
-		return 0;
+		return R_DRA;
         case 0 :
-		return 0;
+		return R_DRA;
         case 1 :
-		return 5;
+		return R_WIN;
         case 2 :
-		return -5;
+		return R_LOS;
         default:
-		return 0;
+			error("Smth wrong");
         }
 }
 PROCTYPE inline int MoveBlack(T12 pos){
@@ -37,7 +37,7 @@ PROCTYPE inline int MoveBlack(T12 pos){
 static unsigned spewcount[CACHESIZE];
 #define SPEW_LEVEL (1<<0)
 
-#include "move4.c"
+#include "move5.c"
 KERNEL
 #if NODAMKA
     unsigned i = ij;
@@ -52,10 +52,21 @@ KERNEL
 	if(twobit_get(job,idx)==0) {
    		int r;
 		r = MoveWhite(TUnpack((TPACK){busy,i,j}));
-		if(r==0) continue;
-		twobit_set(job,idx,r<0?2:1);
+		switch(r) {
+		case R_DRA:
+			continue;
+		case R_WIN:
+			twobit_set(job,idx,1);
+			break;
+		case R_NOM:
+		case R_LOS:
+			twobit_set(job,idx,2);
+			break;
+		default:
+			error("Smth wrong, r=%d",r);
+		}
 		if ( spewcount[ij%CACHESIZE]++ % SPEW_LEVEL == 0 )
-			fprintf(stderr,"%08X %X %x %d\n",busy,i,j,r<0?2:1);
+			fprintf(stderr,"%08X %X %x %d\n",busy,i,j,r==R_WIN?1:2);
 		atomicAdd(changed+ij%CACHESIZE,1);
 	}
 }

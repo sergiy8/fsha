@@ -16,6 +16,8 @@
 #define NPROC 1
 #endif
 
+enum { R_UNK, R_WIN, R_LOS, R_DRA, R_NOM};
+
 typedef struct {
 	uint32_t w,b,d;
 } T12; // 12 bytes - unpacked position

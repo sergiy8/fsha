@@ -1,6 +1,7 @@
 #include "permut.h"
 #include "malloc_file.c"
 
+
 DATATYPE unsigned char * known[9];
 
 PROCTYPE int Ask(TPACK pos){
@@ -13,9 +14,9 @@ PROCTYPE int Ask(TPACK pos){
 PROCTYPE int StaticWhite(uint32_t w, uint32_t b, uint32_t d){
         switch(Ask(TPack((T12){w,b,d}))) {  // RANK of ask is always less the our
 		case 3:
-        case 0 : return 0;
-        case 1 : return 5;
-        case 2 : return -5;
+        case 0 : return R_DRA;
+        case 1 : return R_WIN;
+        case 2 : return R_LOS;
 	default:
 			return 0;
         }
@@ -24,8 +25,8 @@ PROCTYPE inline int MoveBlack(T12 pos){
         return StaticWhite(_brev(pos.w),_brev(pos.b),_brev(pos.d));
 }
 
-#include "move4.c"
 
+#include "move5.c"
 
 DATATYPE unsigned char * array;
 DATATYPE unsigned long long  changed[CACHESIZE];
@@ -44,10 +45,21 @@ KERNEL
 	if(twobit_get(job,idx)==0) {
    			int r;
 			r = MoveWhite(TUnpack((TPACK){busy,i,j}));
-        	if(r==R_NOMOVE) continue;  // rmain unknown
-        	if(r<0) r=2;
-        	else if(r>0) r=1;
-        	else r=3; // can take - but for draw position
+			switch(r) {
+			case R_NOM:
+        			continue;  // rmain unknown
+			case R_WIN:
+					r=1;
+					break;
+			case R_LOS:
+					r=2;
+					break;
+			case R_DRA:
+        			r=3; // can take - but for draw position
+					break;
+			default:
+					error("Smth wrong, r=%d",r);
+			}
 		twobit_set(job,idx,r);
 		atomicAdd(changed+ij%CACHESIZE,1);
 	}
