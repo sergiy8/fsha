@@ -10,16 +10,19 @@ static uintmax_t c_w, c_b, c_l, c_n;
 PROCTYPE int StaticWhite(uint32_t w, uint32_t b, uint32_t d){
 		TPACK pos = TPack((T12){w,b,d});
         switch(megask(pos)) {
-        case 3:
-        case 0 : return 0;
-        case 1 : return 5;
-        case 2 : return -5;
-		case 4:
-		if (fwrite(&pos, sizeof(pos), 1, ofile) != 1)
-			error("fwrite()");
-		c_n++;
-    default:
-            return 0;
+		case ASK_UNK:
+        case ASK_DRAW : return 0;
+        case ASK_WHITE : return 5;
+        case ASK_BLACK : return -5;
+		case ASK_NODB:
+			if(pos.d == 0)
+				error("Smth wrong");
+			if (fwrite(&pos, sizeof(pos), 1, ofile) != 1)
+				error("fwrite()");
+			c_n++;
+			return 0;
+    	default:
+			error("Smth wrong from megask");
         }
 }
 
@@ -31,8 +34,8 @@ PROCTYPE inline int MoveBlack(T12 pos){
 #undef NODAMKA
 #include "move4.c"
 
-#define INFILE DATADIR"9-q2"
-#define OFILE  DATADIR"9-q3.unsorted"
+#define INFILE DATADIR"9-q"
+#define OFILE  DATADIR"9-q-qprocessor"
 
 int main() {
 
@@ -46,10 +49,10 @@ int main() {
 	if(ofile == NULL)
 		error("Can't open "OFILE);
 
-	FILE * wpart = fopen(DATADIR"9-w","a");
+	FILE * wpart = fopen(DATADIR"9-w-qprocessor","w");
 	if(wpart == NULL)
 		error("Can't open 9-w");
-	FILE * bpart = fopen(DATADIR"9-b","a");
+	FILE * bpart = fopen(DATADIR"9-b-qprocessor","w");
 	if(bpart == NULL)
 		error("Can't open 9-b");
 
@@ -63,12 +66,13 @@ int main() {
 		} else if (r>0) {
 			kuda = wpart;
 			c_w++;
-		} else { //takege to draw...
-			kuda = ofile;
+		} else { //We don't copy unresolved to output
+			kuda = NULL;
 			c_l++;
 		}
-		if (fwrite(&pos, sizeof(pos), 1, kuda) != 1)
-			error("fwrite()");
+		if(kuda)
+			if (fwrite(&pos, sizeof(pos), 1, kuda) != 1)
+				error("fwrite()");
 	}
 	printf("Leave: %ju\n", c_l);
 	printf("New: %ju\n", c_n);

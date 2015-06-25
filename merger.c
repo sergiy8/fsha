@@ -49,6 +49,16 @@ int main(int argc, char ** argv) {
 	for(i=0; i<argc; i++) {
 		pthread_join(pid[i],NULL);
 	}
+	if( argc == 1) { // Special case, one input stream, just unique copy
+		if(inputs[0].max) // paranoid )
+			if(fwrite(inputs[0].pointer, sizeof(TPACK), 1, stdout) != 1)
+				error("fwrite:%m");
+		for(int i=1; i< inputs[0].max; i++)
+			if(compar(inputs[0].pointer + i - 1, inputs[0].pointer + i ))
+				if(fwrite(inputs[0].pointer + i , sizeof(TPACK), 1, stdout) != 1)
+					error("fwrite:%m");
+		return 0;
+	}
 	for(;;) {
 		qsort(inputs,argc,sizeof(inputs[0]),icompar);
 		TPACK * x = inputs[0].pointer + inputs[0].cur;

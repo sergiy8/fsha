@@ -177,7 +177,7 @@ for(;;) {
 	  }
 	if(option_v)
 		tprintf("%1d %4ju %4ju %4ju %4ju\n",RANK,total[0],total[1],total[2],total[3]);
-	printf("%1d %s %s %s %s ",RANK,itoa(total[0]),itoa(total[1]),itoa(total[2]),itoa(total[3]));
+	printf("%1d %s %s %s %s\n",RANK,itoa(total[0]),itoa(total[1]),itoa(total[2]),itoa(total[3]));
 	}
 	syslog(LOG_INFO,"finished");
 #else

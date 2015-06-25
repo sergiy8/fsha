@@ -77,7 +77,7 @@ static ask_t megask(TPACK pos) {
 		if(known[arank]==NULL)
 			return ASK_NODB;
     	uint32_t  idx  = blist_get(pos.b);
-    	return twobit_get(known[arank] + (uint64_t)((pos.w<<arank) | pos.d) * cnk(32,arank)/4, idx);
+    	return twobit_get(known[arank] + (uint64_t)((pos.w<<arank) | pos.d) * cnk(32,arank)/4, idx) ?: ASK_DRAW;
 	}
 }
 #else
@@ -118,6 +118,6 @@ static ask_t megask(TPACK pos) {
 	uint8_t val;
 	if (read(known[arank], & val, 1) != 1)
 		error("read() arank=%d",arank);
-	return twobit_get(&val, idx % 4);
+	return twobit_get(&val, idx % 4) ?: ASK_DRAW;
 }
 #endif
