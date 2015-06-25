@@ -155,10 +155,10 @@ const char * summary(int value){
 }
 
 static int revert_ask(int x) {
-	if(x==1)
-		return 2;
-	if(x==2)
-		return 1;
+	if(x==ASK_WHITE)
+		return ASK_BLACK;
+	if(x==ASK_BLACK)
+		return ASK_WHITE;
 	return x;
 }
 
@@ -175,9 +175,9 @@ int MoveBlack(T12 pos){
 	future[maxfuture].cp = TPack(swap_t12(pos));
 	future[maxfuture].value = revert_ask(megask(TPack((T12){_brev(pos.w),_brev(pos.b),_brev(pos.d)})));
 	maxfuture++;
-	return 1;
+	return R_UNK;
 }
-#include "move4.c"
+#include "move5.c"
 void EraseFuture(void){
 	for(int x=0;x<maxfuture;x++){
 		werase(future[x].doska);
