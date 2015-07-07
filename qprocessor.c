@@ -1,7 +1,18 @@
+#include "time.h"
+#include "signal.h"
 #include "sha.h"
+#include "percent.h"
 
 #undef MEGASK_REMOTE
 #include "megask.c"
+
+static time_t started;
+static volatile uintmax_t curindex, maxindex;
+#define GINTERVAL 60
+static void glukalo(int s){
+	alarm(GINTERVAL);
+	tprintf("%s\n",percent(curindex, maxindex));
+}
 
 static FILE * ofile;
 
@@ -10,17 +21,17 @@ static uintmax_t c_w, c_b, c_l, c_n;
 PROCTYPE int StaticWhite(uint32_t w, uint32_t b, uint32_t d){
 		TPACK pos = TPack((T12){w,b,d});
         switch(megask(pos)) {
-		case ASK_UNK:
-        case ASK_DRAW : return 0;
-        case ASK_WHITE : return 5;
-        case ASK_BLACK : return -5;
+		case ASK_UNK: return R_UNK;
+        case ASK_DRAW : return R_DRA;
+        case ASK_WHITE : return R_WIN;
+        case ASK_BLACK : return R_LOS;
 		case ASK_NODB:
 			if(pos.d == 0)
 				error("Smth wrong");
 			if (fwrite(&pos, sizeof(pos), 1, ofile) != 1)
 				error("fwrite()");
 			c_n++;
-			return 0;
+			return R_UNK;
     	default:
 			error("Smth wrong from megask");
         }
@@ -32,18 +43,30 @@ PROCTYPE inline int MoveBlack(T12 pos){
 }
 
 #undef NODAMKA
-#include "move4.c"
+#include "move5.c"
 
-#define INFILE DATADIR"9-q"
+static char * INFILE  = DATADIR"9-q";
 #define OFILE  DATADIR"9-q-qprocessor"
 
-int main() {
+int main(int argc, char **argv) {
+
+	if( argc == 2)
+		INFILE = argv[1];
+	dbg("INFILE=%s",INFILE);
 
 	megask_init();
 
+	struct stat buf;
+	if( stat(INFILE,&buf ))
+		error("Cannot stat %s:%m",INFILE);
+
+	if (buf.st_size % sizeof(TPACK))
+		error("Illegal size %s",INFILE);
+	maxindex = buf.st_size / sizeof(TPACK);
+
 	FILE * infile = fopen(INFILE,"r");
 	if(infile == NULL)
-		error("Can't open "INFILE);
+		error("Can't open %s",INFILE);
 
 	ofile = fopen(OFILE,"w");
 	if(ofile == NULL)
@@ -57,13 +80,19 @@ int main() {
 		error("Can't open 9-b");
 
 	TPACK pos;
+
+    time(&started);
+    signal(SIGALRM,glukalo);
+	alarm(GINTERVAL);
+
 	while(fread(&pos, sizeof(pos), 1, infile)){
+		curindex ++;
 		int r = MoveWhite(TUnpack(pos));
 		FILE * kuda;
-		if (r<0) {
+		if (r==R_LOS) {
 			kuda = bpart;
 			c_b++;
-		} else if (r>0) {
+		} else if (r==R_WIN) {
 			kuda = wpart;
 			c_w++;
 		} else { //We don't copy unresolved to output

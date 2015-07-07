@@ -5,8 +5,8 @@
 #define MOVE_FIND_ALL 0
 #endif
 
-#ifndef _MOVE4_C
-#define _MOVE4_C
+#ifndef _MOVE5_C
+#define _MOVE5_C
 
 #include "neighbor.inc"
 static inline int NEX(const int * tab, int *  x){
@@ -20,7 +20,7 @@ static inline int NEX(const int * tab, int *  x){
 static const int  restable[5][5] = {
 	[R_UNK][R_UNK] = R_UNK,
 	[R_UNK][R_WIN] = R_WIN,
-	[R_UNK][R_LOS] = R_LOS,
+	[R_UNK][R_LOS] = R_UNK,
 	[R_UNK][R_DRA] = R_DRA,
 	[R_UNK][R_NOM] = R_UNK,
 
@@ -60,7 +60,7 @@ static const int  resnegate[5]= {
 #define r_negate(x) resnegate[x]
 
 
-#endif //_MOVE4_C
+#endif //_MOVE5_C
 
 #ifndef IN_klini
 // if we can take - do it, otherwise return R_NOM

@@ -46,6 +46,7 @@ static ask_t megask(TPACK pos) {
 
 #elif __x86_64__
 #include "malloc_file.c"
+#include "deepask.c"
 #include "megask9.c"
 
 static unsigned char * known [9];
@@ -70,7 +71,7 @@ static ask_t megask(TPACK pos) {
 	int arank = __builtin_popcount(pos.b);
 	switch (arank) {
 	default:
-		return ASK_NODB;
+		return deepask(pos);
 	case 9:
 		return megask9(pos);
 	case 1 ... 8:

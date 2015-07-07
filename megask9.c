@@ -34,8 +34,6 @@ static void megask9_init(void) {
 }
 
 static ask_t megask9(TPACK pos) {
-		if (simple9 == NULL)
-			return ASK_NODB;
         if(pos.d) {
 			if (bsearch(&pos, sw, sw_count, sizeof(TPACK), compar))
 				return ASK_WHITE;
@@ -43,8 +41,18 @@ static ask_t megask9(TPACK pos) {
 				return ASK_BLACK;
 			if (bsearch(&pos, sd, sd_count, sizeof(TPACK), compar))
 				return ASK_DRAW;
-			return ASK_NODB;
+			return deepask(pos);
 		}
+		if (simple9 == NULL)
+			return ASK_NODB;
         uint32_t  idx  = blist_get(pos.b);
-        return twobit_get(simple9 + (uint64_t)pos.w * cnk(32,9)/4, idx);
+        switch(twobit_get(simple9 + (uint64_t)pos.w * cnk(32,9)/4, idx)) {
+		case 0: return ASK_NODB; // Sic!
+		case 1: return ASK_WHITE;
+		case 2: return ASK_BLACK;
+		case 3: return ASK_DRAW;
+		default:
+			error("Smth wrong");
+		}
 }
+

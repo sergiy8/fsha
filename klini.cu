@@ -3,14 +3,16 @@ DATATYPE unsigned char * array;
 DATATYPE unsigned long long  changed[CACHESIZE];
 
 #if NODAMKA
+#undef IN_klini
 #include "megask.c"
+#define IN_klini 1
 #include <pthread.h>
 static pthread_key_t key;
 static int question(TPACK x) {
 	FILE * f = pthread_getspecific(key);
 	if (fwrite(&x,sizeof(x),1,f) != 1)
 		error("%m");
-	return 0;
+	return R_UNK;
 }
 typedef void (*DESTRUCTOR)(void *);
 #define EXTRA_INIT     megask_init(); pthread_key_create(&key, (DESTRUCTOR)fclose);
@@ -21,15 +23,16 @@ PROCTYPE int StaticWhite(uint32_t w, uint32_t b, uint32_t d){
 #if NODAMKA
 	switch(megask(x)) {
 		case ASK_NODB:
-			return question(x);
+			if(d)
+				return question(x);
 		case ASK_UNK:
-			return 0;
+			return R_UNK;
 		case ASK_DRAW:
-			return 0;
+			return R_DRA;
 		case ASK_WHITE:
-			return 5;
+			return R_WIN;
 		case ASK_BLACK:
-			return -5;
+			return R_LOS;
 		default:
 			error("Smth wrong: %08X %X %X = %d", x.b, x.w, x.d, megask(x));
 	}
@@ -72,6 +75,7 @@ KERNEL
    		int r;
 		r = MoveWhite(TUnpack((TPACK){busy,i,j}));
 		switch(r) {
+		case R_UNK:
 		case R_DRA:
 			continue;
 		case R_WIN:

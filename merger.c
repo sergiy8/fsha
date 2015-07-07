@@ -38,7 +38,7 @@ int main(int argc, char ** argv) {
 		if( stat(argv[i],&buf))
 			error("Cannot stat %s:%m",argv[i]);
 		if (buf.st_size % sizeof(TPACK))
-			error("%s:invalid size",argv[i]);
+			dbg("%s:invalid size",argv[i]);
 		inputs[i].pointer = malloc_file(buf.st_size,FMODE_RW,"%s",argv[i]);
 		inputs[i].fname = argv[i];
 		inputs[i].cur = 0;
